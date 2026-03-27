@@ -9,7 +9,6 @@ The Formula repository contains a sample project build upon the Unfold theme for
 
 - [Installation](#installation)
 - [Loading sample data](#loading-sample-data)
-- [Custom Dashboard](#custom-dashboard)
 - [Compiling Styles](#compiling-styles)
 
 ## Installation
@@ -41,12 +40,6 @@ After successful installation, database will be empty and there will be no data 
 ```bash
 docker compose exec web python manage.py loaddata formula/fixtures/*
 ```
-
-## Custom Dashboard
-
-The Formula demonstration project includes a custom dashboard. All components available in the dashboard are custom-made just for showcase and are not a part of Unfold. It means that any real data are used there and in case that real data are involved it is necessary to pass additional data into the template from the database.
-
-All custom widgets used in Formula are located inside `formula/templates/admin/components/`. The main layout for the dashboard is created by overriding `index.html` and the content can be found here `formula/templates/admin/index.html`. For more information check official Unfold documentation.
 
 ## Compiling Styles
 
