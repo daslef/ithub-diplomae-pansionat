@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% block title %}Главная — Пансионат «Душевный очаг»{% endblock %}
+{% block content %}
+<div class="text-center">
+  <h1 class="mb-4">Добро пожаловать в пансионат «Душевный очаг»</h1>
+  <p class="lead mb-4">Комфортные условия проживания и забота о каждом.</p>
+  <a href="{{ url_for('book') }}" class="btn btn-success btn-lg">Забронировать место</a>
+</div>
+
+
+
+<section class="about my-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-5">
+        <img src="{{ url_for('static', filename='images/i (2).webp') }}"
+             alt="Наш пансионат"
+             class="img-fluid rounded shadow">
+      </div>
+      <div class="col-md-7">
+        <div class="card shadow-sm border-0 p-4 rounded-4 bg-light">
+          <h2 class="mb-3 text-success fw-bold">О нас</h2>
+          <p class="lead mb-2">
+            Персонал нашего пансионата относится с вниманием и глубоким уважением к своим постояльцам.
+            Всегда готов выслушать и помочь каждому. Вы будете всегда спокойны, что ваши родственники
+            окружены заботой и любовью.
+            По опыту нашей работы хотим с уверенностью вам сказать, что даже если вы будете стараться
+            максимально часто общаться со своими бабушками и дедушками, им всё равно будет не хватать
+            общения со сверстниками, поэтому мы приглашаем вас в наш уютный домашний пансионат
+            в центре Санкт-Петербурга.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="my-5">
+
+<div class="card shadow-sm border-0 p-4 rounded-4 bg-light mb-5">
+  <div class="row align-items-center">
+    <div class="col-md-6">
+      <img src="{{ url_for('static', filename='images/original_5d961944f243a153fa7b874a_5d9619b725e1a.avif') }}"
+           class="img-fluid rounded-4 shadow" alt="Комнаты для лежачих постояльцев">
+    </div>
+    <div class="col-md-6 d-flex flex-column justify-content-center">
+      <h3 class="text-success fw-bold mb-3">Комнаты для лежачих постояльцев</h3>
+      <p class="lead mb-0">
+        1 этаж, уютные и светлые комнаты с телевизором, столом, шкафом и тумбочками а так же оснащены камерами видеонаблюдения.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 p-4 rounded-4 bg-light">
+  <div class="row align-items-center">
+    <div class="col-md-6 d-flex flex-column justify-content-center">
+      <h3 class="text-success fw-bold mb-3">Комнаты для активных пожилых</h3>
+      <p class="lead mb-0">
+        2 этаж, просторные светлые комнаты с балконами и зонами отдыха. Оснащены камерами видеонаблюдения, тумбочкой, столом и живописным видом из окна.
+      </p>
+    </div>
+    <div class="col-md-6">
+      <img src="{{ url_for('static', filename='images/i (1).webp') }}"
+           class="img-fluid rounded-4 shadow" alt="Комнаты для активных пожилых">
+    </div>
+  </div>
+</div>
+
+
+
+<hr class="my-5">
+
+<section class="container my-5">
+  <h2 class="text-center mb-5 fw-bold text-success">Преимущества нашего пансионата</h2>
+  <p class="text-center mb-4 fs-5 text-muted">Здесь созданы комфортные условия для отдыха, ухода и досуга.</p>
+
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card-body text-center">
+          <h5 class="fw-bold text-success mb-3">1. Расположение</h5>
+          <p>В шаговой доступности от метро Василеостровская, в самом центре Санкт-Петербурга.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card-body text-center">
+          <h5 class="fw-bold text-success mb-3">2. Мониторинг температуры</h5>
+          <p>Ежедневный контроль температуры и давления проживающих в пансионате.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card-body text-center">
+          <h5 class="fw-bold text-success mb-3">3. Питание</h5>
+          <p>Правильно подобранное питание с учётом возраста и хронических заболеваний.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card-body text-center">
+          <h5 class="fw-bold text-success mb-3">4. Досуг</h5>
+          <p>Мероприятия, концерты, визиты школьников и артистов делают наши будни праздничными.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card-body text-center">
+          <h5 class="fw-bold text-success mb-3">5. Водные процедуры</h5>
+          <p>Проводятся ежедневно, независимо от состояния постояльца. Полное отсутствие запахов.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card-body text-center">
+          <h5 class="fw-bold text-success mb-3">6. Обученный персонал</h5>
+          <p>Опытные сотрудники с многолетним стажем ухода за людьми, требующими особой заботы.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card-body text-center">
+          <h5 class="fw-bold text-success mb-3">7. Фиксированная стоимость</h5>
+          <p>Прозрачная и постоянная цена без скрытых условий и “акций”.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card-body text-center">
+          <h5 class="fw-bold text-success mb-3">8. Специальные условия</h5>
+          <p>Многофункциональные кровати, ходунки, инвалидные кресла — всё необходимое на месте.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card-body text-center">
+          <h5 class="fw-bold text-success mb-3">9. Видеонаблюдение</h5>
+          <p>Круглосуточное видеонаблюдение для спокойствия постояльцев и их близких.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="my-5">
+
+<section class="about-section bg-light rounded-4 p-5 shadow-sm mt-5">
+  <h2 class="text-center mb-4 text-success">Частный пансионат для пожилых и дом престарелых в Санкт-Петербурге с круглосуточным уходом</h2>
+
+  <p>Современный частный пансионат для пожилых <strong>«Душевный очаг»</strong> — это уютный дом престарелых в Санкт-Петербурге в шаговой доступности от метро Василеостровская. Он дает возможность каждому пенсионеру провести свою старость в комфорте и уверенности в завтрашнем дне. Рядом с пансионатом есть место для прогулок и зеленая пешеходная зона, где можно заниматься скандинавской ходьбой или зарядкой на свежем воздухе.</p>
+
+  <h4 class="mt-4 text-success">Пансионат для пожилых СПБ — цены 2025</h4>
+  <p>Стоимость проживания в пансионате зависит от:</p>
+  <ul>
+    <li>продолжительности пребывания (долговременное или краткосрочное);</li>
+    <li>количества человек в комнате;</li>
+    <li>необходимости в регулярном сестринском уходе.</li>
+  </ul>
+  <p>Чтобы узнать стоимость проживания, достаточно обратиться к представителям пансионата и обсудить все детали. После согласования заключается договор в ППФ.</p>
+
+  <h4 class="mt-4 text-success">Как можно оплатить услуги по уходу и проживанию</h4>
+  <p>Оплата возможна наличными или банковским переводом. При заключении договора предоставляются реквизиты для всех платежей.</p>
+
+  <h4 class="mt-4 text-success">Дом престарелых за пенсию</h4>
+  <p>Пансионат предоставляет возможность оплаты проживания за счет пенсионных выплат. Пенсия перечисляется на счет организации для своевременной оплаты услуг.</p>
+
+  <h4 class="mt-4 text-success">Дом престарелых в Санкт-Петербурге с домашней атмосферой</h4>
+  <p>Пансионат внешне напоминает уютную гостиницу. Все комнаты оснащены многофункциональными кроватями, прикроватными столиками и тумбочками. При желании можно установить телевизор.</p>
+  <p>Созданы условия для маломобильных жильцов: перила, подъемники, трости, коляски. Персонал всегда готов помочь выйти на прогулку.</p>
+
+  <h4 class="mt-4 text-success">Частный пансионат «Душевный очаг»</h4>
+  <p>Наши услуги:</p>
+  <ul>
+    <li>Круглосуточный контроль и сестринский уход;</li>
+    <li>Сбалансированное питание и индивидуальное меню;</li>
+    <li>Свободный режим дня и дружеская атмосфера;</li>
+    <li>Бесплатное использование колясок и вспомогательного оборудования;</li>
+    <li>Врачебное наблюдение по ОМС;</li>
+    <li>Интересный досуг, мастер-классы и библиотека;</li>
+    <li>Посещение родственниками и свободное общение.</li>
+  </ul>
+
+  <p>Персонал умеет работать с пожилыми людьми с деменцией, болезнью Альцгеймера, после инсультов и переломов. Мы обеспечиваем профессиональный уход и душевное участие.</p>
+
+  <h4 class="mt-4 text-success">Питание</h4>
+  <p>Трехразовое питание с возможностью индивидуального меню. Для лежачих постояльцев еда подается в комнату.</p>
+
+  <h4 class="mt-4 text-success">Индивидуальный уход</h4>
+  <p>Возможно выделение персональной сиделки или санитарки. Услуга предоставляется недорого и помогает обеспечить комфорт постояльца.</p>
+
+  <h4 class="mt-4 text-success">Отделение временного пребывания</h4>
+  <p>Мы предлагаем временное размещение (до 6 месяцев) для пожилых людей, чьи родственники временно отсутствуют или проходят ремонт. Также это решение для восстановления после лечения.</p>
+
+  <h4 class="mt-4 text-success">Условия приема и стоимость</h4>
+  <p>Чтобы поселиться в наш пансионат, оставьте заявку на сайте, выберите комнату, согласуйте условия и заключите договор. Мы открыты для всех, кто ищет заботу, комфорт и душевное общение.</p>
+</section>
+
+
+<footer class="bg-success text-white text-center text-lg-start mt-5 rounded-top-4 shadow-lg">
+  <div class="container p-4">
+    <div class="row">
+
+      <div class="col-lg-6 col-md-12 mb-4 mb-md-0 text-start">
+        <h5 class="text-uppercase fw-bold mb-3">Контакты</h5>
+        <p class="mb-1"><i class="bi bi-geo-alt-fill me-2"></i>г. Санкт-Петербург, 12 линия Васильевского острова, 55/20 литера В </p>
+        <p class="mb-1"><i class="bi bi-telephone-fill me-2"></i>+7 (812) 555-23-45</p>
+        <p class="mb-1"><i class="bi bi-envelope-fill me-2"></i>info@dushevnoyochag.ru</p>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center p-3 bg-dark rounded-bottom-4" style="font-size: 0.9rem;">
+    © 2025 Пансионат «Душевный очаг» | Все права защищены
+  </div>
+</footer>
+
+
+
+{% endblock %}

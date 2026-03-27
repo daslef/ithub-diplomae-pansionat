@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Результат бронирования{% endblock %}
+{% block content %}
+<div class="text-center">
+  <h2>Спасибо, {{ name }}!</h2>
+  <p class="lead mt-3">{{ message }}</p>
+
+  {% if "подобрали" in message %}
+    <h4 class="text-success mt-3">✅ Место успешно забронировано!</h4>
+  {% else %}
+    <h4 class="text-danger mt-3">❌ Место недоступно</h4>
+  {% endif %}
+
+  <a href="{{ url_for('index') }}" class="btn btn-outline-success mt-4">На главную</a>
+</div>
+{% endblock %}

@@ -7,14 +7,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterModelOptions(
-            name="standing",
-            options={
-                "ordering": ["weight"],
-                "verbose_name": "standing",
-                "verbose_name_plural": "standings",
-            },
-        ),
         migrations.AddField(
             model_name="driver",
             name="is_active",

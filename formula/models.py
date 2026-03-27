@@ -139,14 +139,6 @@ class Driver(AuditedModel):
         on_delete=models.SET_NULL,
         related_name="driver_editor",
     )
-    standing = models.ForeignKey(
-        "Standing",
-        verbose_name=_("standing"),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="standing",
-    )
     constructors = models.ManyToManyField(
         "Constructor", verbose_name=_("constructors"), blank=True
     )
@@ -254,56 +246,6 @@ class Race(AuditedModel):
 
     def __str__(self):
         return f"{self.circuit.name}, {self.year}"
-
-    def get_absolute_url(self):
-        return "https://example.com"
-
-
-class PitStop(AuditedModel):
-    race = models.ForeignKey(Race, verbose_name=_("race"), on_delete=models.PROTECT)
-    driver = models.ForeignKey(
-        Driver, verbose_name=_("driver"), on_delete=models.PROTECT
-    )
-    time = models.TimeField(_("time"))
-    duration = models.TimeField(_("duration"))
-    lap = models.PositiveIntegerField(_("lap"))
-
-    class Meta:
-        db_table = "pit_stops"
-        verbose_name = _("pit stop")
-        verbose_name_plural = _("pit stops")
-
-
-class Standing(AuditedModel):
-    race = models.ForeignKey(Race, verbose_name=_("race"), on_delete=models.PROTECT)
-    driver = models.ForeignKey(
-        Driver,
-        verbose_name=_("driver"),
-        on_delete=models.PROTECT,
-        related_name="standings",
-    )
-    constructor = models.ForeignKey(
-        Constructor, verbose_name=_("constructor"), on_delete=models.PROTECT
-    )
-    position = models.PositiveIntegerField(_("position"))
-    number = models.PositiveIntegerField(_("number"))
-    laps = models.PositiveIntegerField(_("laps"))
-    points = models.DecimalField(
-        _("points"),
-        decimal_places=2,
-        max_digits=4,
-        help_text=_("Points scored by the driver/constructor in the race"),
-    )
-    weight = models.PositiveIntegerField(_("weight"), default=0, db_index=True)
-
-    class Meta:
-        db_table = "standings"
-        verbose_name = _("standing")
-        verbose_name_plural = _("standings")
-        ordering = ["weight"]
-
-    def __str__(self):
-        return f"{self.driver.full_name}, {self.position}"
 
     def get_absolute_url(self):
         return "https://example.com"

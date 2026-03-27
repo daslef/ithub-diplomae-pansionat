@@ -16,17 +16,7 @@ from django.templatetags.static import static
 from django.urls import path, reverse_lazy
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django_celery_beat.admin import ClockedScheduleAdmin as BaseClockedScheduleAdmin
-from django_celery_beat.admin import CrontabScheduleAdmin as BaseCrontabScheduleAdmin
-from django_celery_beat.admin import PeriodicTaskAdmin as BasePeriodicTaskAdmin
-from django_celery_beat.admin import PeriodicTaskForm, TaskSelectWidget
-from django_celery_beat.models import (
-    ClockedSchedule,
-    CrontabSchedule,
-    IntervalSchedule,
-    PeriodicTask,
-    SolarSchedule,
-)
+
 from djangoql.admin import DjangoQLSearchMixin
 from guardian.admin import GuardedModelAdmin
 from import_export.admin import ExportActionModelAdmin, ImportExportModelAdmin
@@ -83,58 +73,15 @@ from formula.models import (
     DriverCategory,
     DriverStatus,
     DriverWithFilters,
-    PitStop,
     Profile,
     Race,
-    Standing,
     Tag,
     User,
 )
 from formula.resources import AnotherConstructorResource, ConstructorResource
 from formula.views import CrispyFormsetView, CrispyFormView
 
-admin.site.unregister(PeriodicTask)
-admin.site.unregister(IntervalSchedule)
-admin.site.unregister(CrontabSchedule)
-admin.site.unregister(SolarSchedule)
-admin.site.unregister(ClockedSchedule)
 admin.site.unregister(Group)
-
-
-class UnfoldTaskSelectWidget(UnfoldAdminSelectWidget, TaskSelectWidget):
-    pass
-
-
-class UnfoldPeriodicTaskForm(PeriodicTaskForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["task"].widget = UnfoldAdminTextInputWidget()
-        self.fields["regtask"].widget = UnfoldTaskSelectWidget()
-
-
-@admin.register(PeriodicTask)
-class PeriodicTaskAdmin(BasePeriodicTaskAdmin, ModelAdmin):
-    form = UnfoldPeriodicTaskForm
-
-
-@admin.register(IntervalSchedule)
-class IntervalScheduleAdmin(ModelAdmin):
-    pass
-
-
-@admin.register(CrontabSchedule)
-class CrontabScheduleAdmin(BaseCrontabScheduleAdmin, ModelAdmin):
-    pass
-
-
-@admin.register(SolarSchedule)
-class SolarScheduleAdmin(ModelAdmin):
-    pass
-
-
-@admin.register(ClockedSchedule)
-class ClockedScheduleAdmin(BaseClockedScheduleAdmin, ModelAdmin):
-    pass
 
 
 class CircuitNonrelatedStackedInline(NonrelatedStackedInline):
@@ -158,7 +105,7 @@ class TagGenericTabularInline(GenericStackedInline):
 class UserDriverTabularInline(TabularInline):
     model = Driver
     fk_name = "author"
-    autocomplete_fields = ["standing"]
+    # autocomplete_fields = ["standing"]
     fields = ["first_name", "last_name", "code", "status", "salary", "category"]
 
 
@@ -342,41 +289,11 @@ class GroupAdmin(BaseGroupAdmin, ModelAdmin):
         return super().changelist_view(request, extra_context=extra_context)
 
 
-class RaceStandingInline(StackedInline):
-    model = Standing
-    fields = ["driver", "constructor", "position", "points", "laps", "number", "weight"]
-    ordering_field = "weight"
-    fk_name = "race"
-    ordering = ["position"]
-    extra = 2
-    hide_title = True
-    per_page = 5
-    autocomplete_fields = ["driver", "constructor"]
-    # min_num = 6
-    max_num = 10
-    show_change_link = True
-    # classes = ["collapse"]
-    collapsible = True
-
-
-class RacePitStopInline(TabularInline):
-    model = PitStop
-    fk_name = "race"
-    fields = ["driver", "time", "duration", "lap"]
-    extra = 1
-    autocomplete_fields = ["driver"]
-    classes = ["collapse"]
-
-
 class CircuitRaceInline(TabularInline):
     model = Race
     autocomplete_fields = ["winner"]
     fields = ["winner", "year", "laps", "date", "weight"]
     ordering_field = "weight"
-    inlines = [
-        RaceStandingInline,
-        RacePitStopInline,
-    ]
     extra = 0
     show_change_link = True
 
@@ -411,34 +328,14 @@ class ConstructorAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionModelAdmi
     ordering_field = "weight"
     hide_ordering_field = True
 
-    actions_list = ["custom_actions_list"]
+    actions_list = []
     actions_row = [
         "custom_actions_row",
         "custom_actions_row2",
-        "custom_actions_row3",
-        "custom_actions_row4",
-        "custom_actions_row5",
+        "custom_actions_row3"
     ]
     actions_detail = ["custom_actions_detail"]
     actions_submit_line = ["custom_actions_submit_line"]
-
-    @action(
-        description="Custom list action",
-        url_path="actions-list-custom-url",
-        permissions=[
-            "custom_actions_list",
-            "another_custom_actions_list",
-        ],
-    )
-    def custom_actions_list(self, request):
-        messages.success(request, "List action has been successfully executed.")
-        return redirect(request.headers["referer"])
-
-    def has_custom_actions_list_permission(self, request):
-        return request.user.is_superuser
-
-    def has_another_custom_actions_list_permission(self, request):
-        return request.user.is_staff
 
     @action(
         description=_("Rebuild Index"),
@@ -482,36 +379,6 @@ class ConstructorAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionModelAdmi
             request.headers.get("referer")
             or reverse_lazy("admin:formula_constructor_changelist")
         )
-
-    @action(description=_("Sync Containers"), url_path="actions-row-sync-containers")
-    def custom_actions_row4(self, request, object_id):
-        messages.success(
-            request, f"Row action has been successfully executed. Object ID {object_id}"
-        )
-        return redirect(
-            request.headers.get("referer")
-            or reverse_lazy("admin:formula_constructor_changelist")
-        )
-
-    @action(
-        description=_("Never visible"),
-        url_path="actions-row-deploy-containers",
-        permissions=["custom_row_action_false", "custom_row_action_true"],
-    )
-    def custom_actions_row5(self, request, object_id):
-        messages.success(
-            request, f"Row action has been successfully executed. Object ID {object_id}"
-        )
-        return redirect(
-            request.headers.get("referer")
-            or reverse_lazy("admin:formula_constructor_changelist")
-        )
-
-    def has_custom_row_action_false_permission(self, request):
-        return False
-
-    def has_custom_row_action_true_permission(self, request):
-        return True
 
     @action(
         description="Custom detail action",
@@ -561,25 +428,6 @@ class FullNameFilter(TextFilter):
 
         return queryset.filter(
             Q(first_name__icontains=self.value()) | Q(last_name__icontains=self.value())
-        )
-
-
-class DriverStandingInline(TabularInline):
-    model = Standing
-    fields = ["position", "points", "laps", "race", "weight"]
-    readonly_fields = ["race"]
-    ordering_field = "weight"
-    show_change_link = True
-    extra = 0
-    per_page = 5
-    tab = True
-
-    def get_queryset(self, request):
-        return (
-            super()
-            .get_queryset(request)
-            .select_related("race", "driver")
-            .prefetch_related("race__circuit")
         )
 
 
@@ -635,28 +483,14 @@ class DriverAdminForm(forms.ModelForm):
         )
 
 
-class ContructorTableSection(TableSection):
-    # verbose_name = _("Constructors - Many to many relationship")
-    related_name = "constructors"
-    height = 380
-    fields = [
-        "name",
-        "custom_field",
-    ]
-
-    @admin.display(description=_("Points"))
-    def custom_field(self, instance):
-        return random.randint(0, 50)
-
-
 class ChartSection(TemplateSection):
     template_name = "formula/driver_section.html"
 
 
 class DriverAdminMixin(DjangoQLSearchMixin, ModelAdmin):
     list_horizontal_scrollbar_top = True
-    list_sections = [ContructorTableSection, ChartSection]
-    list_sections_classes = "lg:grid-cols-2"
+    list_sections = [ChartSection]
+    # list_sections_classes = "lg:grid-cols-2"
     form = DriverAdminForm
     history_list_per_page = 10
     search_fields = ["last_name", "first_name", "code"]
@@ -665,7 +499,6 @@ class DriverAdminMixin(DjangoQLSearchMixin, ModelAdmin):
     list_display = [
         "display_header",
         "display_constructor",
-        # "display_total_points",
         "display_total_wins",
         "display_category",
         "display_status",
@@ -673,7 +506,6 @@ class DriverAdminMixin(DjangoQLSearchMixin, ModelAdmin):
         "is_active",
     ]
     inlines = [
-        DriverStandingInline,
         RaceWinnerInline,
     ]
     conditional_fields = {
@@ -684,7 +516,6 @@ class DriverAdminMixin(DjangoQLSearchMixin, ModelAdmin):
     autocomplete_fields = [
         "constructors",
         "editor",
-        "standing",
     ]
     radio_fields = {
         "status": admin.VERTICAL,
@@ -696,7 +527,6 @@ class DriverAdminMixin(DjangoQLSearchMixin, ModelAdmin):
         "data",
     ]
     list_before_template = "formula/driver_list_before.html"
-    list_after_template = "formula/driver_list_after.html"
     change_form_show_cancel_button = True
     change_form_before_template = "formula/driver_change_form_before.html"
     change_form_after_template = "formula/driver_change_form_after.html"
@@ -715,29 +545,15 @@ class DriverAdminMixin(DjangoQLSearchMixin, ModelAdmin):
         return (
             super()
             .get_queryset(request)
-            .annotate(total_points=Sum("standing__points"))
-            .annotate(
-                constructor_name=Constructor.objects.filter(
-                    standing__driver_id=OuterRef("pk")
-                ).values("name")[:1]
-            )
             .prefetch_related(
                 "constructors",
                 "race_set",
                 "race_set__circuit",
-                "standings",
-                "standings__race",
-                "standings__race__circuit",
             )
         )
 
     @display(description=_("Driver"), header=True)
     def display_header(self, instance: Driver) -> list:
-        standing = instance.standings.all().first()
-
-        if not standing:
-            return []
-
         return [
             instance.full_name,
             None,
@@ -846,7 +662,6 @@ class DriverAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DriverAdminMixin):
                     "first_race_at",
                     "author",
                     "editor",
-                    "standing",
                     "constructors",
                     "code",
                     "color",
@@ -881,29 +696,11 @@ class DriverAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DriverAdminMixin):
         ),
     ]
     actions_list = [
-        "changelist_action_should_not_be_visible",
         "changelist_action1",
-        "changelist_action4",
-        {
-            "title": _("More"),
-            "variant": ActionVariant.PRIMARY,
-            "items": [
-                "changelist_action3",
-                "changelist_action4",
-                "changelist_action5",
-            ],
-        },
+        "changelist_action5",
     ]
     actions_detail = [
-        "change_detail_action3",
         "change_detail_action",
-        {
-            "title": _("More"),
-            "items": [
-                "change_detail_action1",
-                "change_detail_action2",
-            ],
-        },
     ]
 
     def get_urls(self):
@@ -927,41 +724,12 @@ class DriverAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DriverAdminMixin):
         )
         return redirect(reverse_lazy("admin:formula_driver_changelist"))
 
-    @action(
-        description=_("Sync DB replicas"),
-        icon="sync",
-    )
-    def changelist_action3(self, request):
-        messages.success(
-            request, _("Changelist action has been successfully executed.")
-        )
-        return redirect(reverse_lazy("admin:formula_driver_changelist"))
-
-    @action(description=_("Rebuild cache index"), icon="book_4")
-    def changelist_action4(self, request):
-        messages.success(
-            request, _("Changelist action has been successfully executed.")
-        )
-        return redirect(reverse_lazy("admin:formula_driver_changelist"))
-
     @action(description=_("Optimize queries"), icon="database")
     def changelist_action5(self, request):
         messages.success(
             request, _("Changelist action has been successfully executed.")
         )
         return redirect(reverse_lazy("admin:formula_driver_changelist"))
-
-    @action(
-        description=_("Should not be visible"), permissions=["should_not_be_visible"]
-    )
-    def changelist_action_should_not_be_visible(self, request):
-        messages.success(
-            request, _("Changelist action has been successfully executed.")
-        )
-        return redirect(reverse_lazy("admin:formula_driver_changelist"))
-
-    def has_should_not_be_visible_permission(self, request):
-        return False
 
     @action(
         description=_("Action with form"),
@@ -1114,26 +882,6 @@ class RaceAdmin(ModelAdmin):
     autocomplete_fields = ["circuit", "winner"]
 
 
-@admin.register(Standing)
-class StandingAdmin(ModelAdmin):
-    # list_disable_select_all = True
-    search_fields = [
-        "race__circuit__name",
-        "race__circuit__city",
-        "race__circuit__country",
-        "driver__first_name",
-        "driver__last_name",
-    ]
-    list_display = ["race", "driver", "constructor", "position", "points"]
-    list_filter = ["driver"]
-    autocomplete_fields = ["driver", "constructor", "race"]
-    readonly_fields = ["laps"]
-    paginator = InfinitePaginator
-    show_full_result_count = False
-    list_disable_select_all = True
-    list_per_page = 10
-
-
 @register_component
 class DriverActiveComponent(BaseComponent):
     def get_context_data(self, **kwargs):
@@ -1174,9 +922,6 @@ class DriverTotalPointsComponent(BaseComponent):
         context["children"] = render_to_string(
             "formula/helpers/kpi_progress.html",
             {
-                "total": Standing.objects.aggregate(total_points=Sum("points"))[
-                    "total_points"
-                ],
                 "progress": "positive",
                 "percentage": "24.2%",
             },
@@ -1229,10 +974,3 @@ class DriverSectionChangeComponent(BaseComponent):
             }
         )
         return context
-
-
-try:
-    from unfold_studio.dashboards import *  # noqa
-except (ImportError, RuntimeError):
-    # unfold_studio is not installed
-    pass

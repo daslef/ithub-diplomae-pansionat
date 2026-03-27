@@ -122,58 +122,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="Standing",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("position", models.PositiveIntegerField(verbose_name="position")),
-                ("number", models.PositiveIntegerField(verbose_name="number")),
-                ("laps", models.PositiveIntegerField(verbose_name="laps")),
-                (
-                    "points",
-                    models.DecimalField(
-                        decimal_places=2, max_digits=4, verbose_name="points"
-                    ),
-                ),
-                (
-                    "constructor",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        to="formula.constructor",
-                        verbose_name="constructor",
-                    ),
-                ),
-                (
-                    "driver",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        to="formula.driver",
-                        verbose_name="driver",
-                    ),
-                ),
-                (
-                    "race",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        to="formula.race",
-                        verbose_name="race",
-                    ),
-                ),
-            ],
-            options={
-                "verbose_name": "standing",
-                "verbose_name_plural": "standings",
-                "db_table": "standings",
-            },
-        ),
-        migrations.CreateModel(
             name="User",
             fields=[
                 (

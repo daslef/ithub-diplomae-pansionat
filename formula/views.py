@@ -7,7 +7,6 @@ from unfold.views import UnfoldModelAdminViewMixin
 
 from formula.forms import (
     CustomForm,
-    CustomHorizontalForm,
     DriverForm,
     DriverFormHelper,
     DriverFormSet,
@@ -33,9 +32,7 @@ class CrispyFormView(UnfoldModelAdminViewMixin, FormView):
     template_name = "formula/driver_crispy_form.html"
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["horizontal_form"] = CustomHorizontalForm()
-        return context
+        return super().get_context_data(**kwargs)
 
 
 class CrispyFormsetView(UnfoldModelAdminViewMixin, FormView):
@@ -81,17 +78,3 @@ class CrispyFormsetView(UnfoldModelAdminViewMixin, FormView):
             }
         )
         return context
-
-
-def dashboard_callback(request, context):
-    """
-    Here you can pass additional variables to the dashboard
-    """
-
-    # context.update(
-    #     {
-    #         "sample_variable": "sample_value",
-    #     }
-    # )
-
-    return context

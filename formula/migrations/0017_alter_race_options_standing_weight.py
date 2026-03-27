@@ -15,11 +15,4 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "races",
             },
         ),
-        migrations.AddField(
-            model_name="standing",
-            name="weight",
-            field=models.PositiveIntegerField(
-                db_index=True, default=0, verbose_name="weight"
-            ),
-        ),
     ]

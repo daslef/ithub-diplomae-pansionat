@@ -2,7 +2,6 @@ from collections import OrderedDict
 from os import environ, path
 from pathlib import Path
 
-import sentry_sdk
 from django.core.management.utils import get_random_secret_key
 from django.templatetags.static import static
 from django.urls import reverse_lazy
@@ -16,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = environ.get("SECRET_KEY", get_random_secret_key())
 
-DEBUG = environ.get("DEBUG") == "1"
+DEBUG = True
 
 ROOT_URLCONF = "formula.urls"
 
@@ -29,10 +28,10 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
 ######################################################################
 # Domains
 ######################################################################
-ALLOWED_HOSTS = environ.get("ALLOWED_HOSTS", "localhost").split(",")
+ALLOWED_HOSTS = environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 CSRF_TRUSTED_ORIGINS = environ.get(
-    "CSRF_TRUSTED_ORIGINS", "http://localhost:8000"
+    "CSRF_TRUSTED_ORIGINS", "http://localhost:8000,http://127.0.0.1:8000"
 ).split(",")
 
 ######################################################################
@@ -62,14 +61,10 @@ INSTALLED_APPS = [
     "guardian",
     "constance",
     "simple_history",
-    "django_celery_beat",
     "djmoney",
     "djangoql",
     "formula",
 ]
-
-if environ.get("UNFOLD_STUDIO") == "1":
-    INSTALLED_APPS.insert(0, "unfold_studio")
 
 ######################################################################
 # Middleware
@@ -111,7 +106,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "formula.context_processors.variables",
             ],
         },
     },
@@ -228,37 +222,12 @@ STORAGES = {
 # Unfold
 ######################################################################
 UNFOLD = {
-    "STUDIO": {
-        # "header_sticky": True,
-        # "layout_style": "boxed",
-        # "header_variant": "dark",
-        # "sidebar_style": "minimal",
-        # "sidebar_variant": "dark",
-        # "site_banner": "Custom global message",
-    },
     "SITE_TITLE": _("Formula Admin"),
     "SITE_HEADER": _("Formula Admin"),
     "SITE_SUBHEADER": _("Unfold demo project"),
     "SITE_SYMBOL": "dashboard",
     "SITE_ICON": lambda request: static("formula/images/logo.svg"),
     # "SITE_URL": None,
-    "SITE_DROPDOWN": [
-        {
-            "icon": "diamond",
-            "title": _("Unfold theme repository"),
-            "link": "https://github.com/unfoldadmin/django-unfold",
-        },
-        {
-            "icon": "rocket_launch",
-            "title": _("Turbo boilerplate repository"),
-            "link": "https://github.com/unfoldadmin/turbo",
-        },
-        {
-            "icon": "description",
-            "title": _("Technical documentation"),
-            "link": "https://unfoldadmin.com/docs/",
-        },
-    ],
     # "SHOW_HISTORY": True,
     "SHOW_LANGUAGES": True,
     "LANGUAGE_FLAGS": {
@@ -266,7 +235,7 @@ UNFOLD = {
         "en": "🇺🇸",
     },
     "ENVIRONMENT": "formula.utils.environment_callback",
-    "DASHBOARD_CALLBACK": "formula.views.dashboard_callback",
+    # "DASHBOARD_CALLBACK": "formula.views.dashboard_callback",
     "LOGIN": {
         "image": lambda request: static("formula/images/login-bg.jpg"),
         "form": "formula.forms.LoginForm",
@@ -322,51 +291,23 @@ UNFOLD = {
             ],
         },
     ],
-    "COMMAND": {
-        "search_models": "formula.utils.search_models_callback",
-        "show_history": "formula.utils.show_history_callback",
-    },
+    # "COMMAND": {
+    #     "search_models": "formula.utils.search_models_callback",
+    #     "show_history": "formula.utils.show_history_callback",
+    # },
     "SIDEBAR": {
-        "show_search": True,
-        "show_all_applications": True,
-        "command_search": True,
+        "show_search": False,
+        "show_all_applications": False,
+        "command_search": False,
         "navigation": [
             {
                 "title": _("Navigation"),
                 "items": [
                     {
-                        "title": _("Dashboard"),
-                        "icon": "dashboard",
-                        "link": reverse_lazy("admin:index"),
-                    },
-                    {
                         "title": _("Drivers"),
                         "icon": "sports_motorsports",
                         "active": "formula.utils.driver_list_link_callback",
-                        ###########################################################
-                        # Works only with Studio: https://unfoldadmin.com/studio/
-                        ###########################################################
-                        "items": [
-                            {
-                                "title": _("List drivers"),
-                                "link": reverse_lazy("admin:formula_driver_changelist"),
-                                "active": "formula.utils.driver_list_sublink_callback",
-                            },
-                            {
-                                "title": _("Advanced filters"),
-                                "link": reverse_lazy(
-                                    "admin:formula_driverwithfilters_changelist"
-                                ),
-                            },
-                            {
-                                "title": _("Crispy form"),
-                                "link": reverse_lazy("admin:crispy_form"),
-                            },
-                            {
-                                "title": _("Crispy formset"),
-                                "link": reverse_lazy("admin:crispy_formset"),
-                            },
-                        ],
+                        "link": reverse_lazy("admin:formula_driver_changelist"),
                     },
                     {
                         "title": _("Circuits"),
@@ -380,13 +321,6 @@ UNFOLD = {
                         "badge": "formula.utils.badge_callback",
                         "badge_variant": "danger",
                         "badge_style": "solid",
-                    },
-                    {
-                        "title": _("Standings"),
-                        "icon": "trophy",
-                        "link": reverse_lazy("admin:formula_standing_changelist"),
-                        "permission": "formula.utils.permission_callback",
-                        # "permission": lambda request: request.user.is_superuser,
                     },
                     {
                         "title": _("Constance"),
@@ -413,62 +347,9 @@ UNFOLD = {
                     },
                 ],
             },
-            {
-                "title": _("Celery Tasks"),
-                "collapsible": True,
-                "items": [
-                    {
-                        "title": _("Clocked"),
-                        "icon": "hourglass_bottom",
-                        "link": reverse_lazy(
-                            "admin:django_celery_beat_clockedschedule_changelist"
-                        ),
-                    },
-                    {
-                        "title": _("Crontabs"),
-                        "icon": "update",
-                        "link": reverse_lazy(
-                            "admin:django_celery_beat_crontabschedule_changelist"
-                        ),
-                    },
-                    {
-                        "title": _("Intervals"),
-                        "icon": "timer",
-                        "link": reverse_lazy(
-                            "admin:django_celery_beat_intervalschedule_changelist"
-                        ),
-                    },
-                    {
-                        "title": _("Periodic tasks"),
-                        "icon": "task",
-                        "link": reverse_lazy(
-                            "admin:django_celery_beat_periodictask_changelist"
-                        ),
-                    },
-                    {
-                        "title": _("Solar events"),
-                        "icon": "event",
-                        "link": reverse_lazy(
-                            "admin:django_celery_beat_solarschedule_changelist"
-                        ),
-                    },
-                ],
-            },
         ],
     },
 }
-
-UNFOLD_STUDIO_ENABLE_CUSTOMIZER = True
-
-UNFOLD_STUDIO_DEFAULT_FRAGMENT = "color-schemes"
-
-UNFOLD_STUDIO_ENABLE_SAVE = False
-
-UNFOLD_STUDIO_ENABLE_FILEUPLOAD = False
-
-UNFOLD_STUDIO_ALWAYS_OPEN = True
-
-UNFOLD_STUDIO_ENABLE_RESET_PASSWORD = True
 
 ######################################################################
 # Money
@@ -486,22 +367,6 @@ LOGIN_PASSWORD = environ.get("LOGIN_PASSWORD")
 # Debug toolbar
 ############################################################################
 DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": lambda request: DEBUG}
-
-######################################################################
-# Plausible
-######################################################################
-PLAUSIBLE_DOMAIN = environ.get("PLAUSIBLE_DOMAIN")
-
-######################################################################
-# Sentry
-######################################################################
-SENTRY_DSN = environ.get("SENTRY_DSN")
-
-if SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        enable_tracing=False,
-    )
 
 ######################################################################
 # Crispy forms

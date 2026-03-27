@@ -91,21 +91,6 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(auto_now=True, verbose_name="modified at"),
         ),
         migrations.AddField(
-            model_name="standing",
-            name="created_at",
-            field=models.DateTimeField(
-                auto_now_add=True,
-                default=django.utils.timezone.now,
-                verbose_name="created at",
-            ),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name="standing",
-            name="modified_at",
-            field=models.DateTimeField(auto_now=True, verbose_name="modified at"),
-        ),
-        migrations.AddField(
             model_name="tag",
             name="created_at",
             field=models.DateTimeField(

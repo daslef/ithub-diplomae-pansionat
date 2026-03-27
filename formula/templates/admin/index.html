@@ -10,10 +10,6 @@
 
 {% block extrahead %}
     {{ block.super }}
-
-    {% if plausible_domain %}
-        <script defer data-domain="{{ plausible_domain }}" src="https://plausible.io/js/script.js"></script>
-    {% endif %}
 {% endblock %}
 
 {% block branding %}
@@ -23,17 +19,4 @@
 {% block content %}
     {% include "unfold/helpers/messages.html" %}
 
-    {% if studio_installed %}
-        {% if request.GET.dashboard == "retention" %}
-            {% include "unfold_studio/dashboards/retention.html" %}
-        {% elif request.GET.dashboard == "system" %}
-            {% include "unfold_studio/dashboards/system.html" %}
-        {% elif request.GET.dashboard == "commerce" %}
-            {% include "unfold_studio/dashboards/commerce.html" %}
-        {% elif request.GET.dashboard == "spending" %}
-            {% include "unfold_studio/dashboards/spending.html" %}
-        {% else %}
-            {% include "formula/dashboards.html" %}
-        {% endif %}
-    {% endif %}
 {% endblock %}
