@@ -7,11 +7,11 @@ from unfold.views import UnfoldModelAdminViewMixin
 
 from formula.forms import (
     CustomForm,
-    DriverForm,
-    DriverFormHelper,
-    DriverFormSet,
+    RoomForm,
+    RoomFormHelper,
+    RoomFormSet,
 )
-from formula.models import Driver
+from formula.models import Booking, Client, Room
 
 
 class HomeView(RedirectView):
@@ -19,46 +19,44 @@ class HomeView(RedirectView):
 
 
 class CrispyFormView(UnfoldModelAdminViewMixin, FormView):
-    title = _("Crispy form")  # required: custom page header title
+    title = _("Crispy form")
     form_class = CustomForm
     success_url = reverse_lazy("admin:index")
-    # required: tuple of permissions
     permission_required = (
-        "formula.view_driver",
-        "formula.add_driver",
-        "formula.change_driver",
-        "formula.delete_driver",
+        "formula.view_client",
+        "formula.add_client",
+        "formula.change_client",
+        "formula.delete_client",
     )
-    template_name = "formula/driver_crispy_form.html"
+    template_name = "formula/client_crispy_form.html"
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(**kwargs)
 
 
 class CrispyFormsetView(UnfoldModelAdminViewMixin, FormView):
-    title = _("Crispy form with formset")  # required: custom page header title
+    title = "Редактирование"
     success_url = reverse_lazy("admin:crispy_formset")
-    # required: tuple of permissions
     permission_required = (
-        "formula.view_driver",
-        "formula.add_driver",
-        "formula.change_driver",
-        "formula.delete_driver",
+        "formula.view_room",
+        "formula.add_room",
+        "formula.change_room",
+        "formula.delete_room",
     )
-    template_name = "formula/driver_crispy_formset.html"
+    template_name = "formula/room_crispy_formset.html"
 
     def get_form_class(self):
         return modelformset_factory(
-            Driver, DriverForm, formset=DriverFormSet, extra=1, can_delete=True
+            Room, RoomForm, formset=RoomFormSet, extra=1, can_delete=True
         )
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs.update(
-            {
-                "queryset": Driver.objects.filter(code__in=["VER", "HAM"]),
-            }
-        )
+        # kwargs.update(
+        #     {
+        #         "queryset": Driver.objects.filter(code__in=["VER", "HAM"]),
+        #     }
+        # )
         return kwargs
 
     def form_invalid(self, form):
@@ -74,7 +72,7 @@ class CrispyFormsetView(UnfoldModelAdminViewMixin, FormView):
 
         context.update(
             {
-                "driver_formset_helper": DriverFormHelper(),
+                "room_formset_helper": RoomFormHelper(),
             }
         )
         return context

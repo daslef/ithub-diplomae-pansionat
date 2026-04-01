@@ -1,13 +1,13 @@
 from import_export import resources
 
-from formula.models import Constructor
+from formula.models import Room
 
 
-class ConstructorResource(resources.ModelResource):
+class RoomResource(resources.ModelResource):
     class Meta:
-        model = Constructor
+        model = Room
 
 
-class AnotherConstructorResource(resources.ModelResource):
+class AnotherRoomResource(resources.ModelResource):
     class Meta:
-        model = Constructor
+        model = Room

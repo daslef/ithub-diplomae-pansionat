@@ -7,12 +7,10 @@
         <div class="container mb-6 mx-auto -my-3 lg:mb-12">
             <ul class="flex flex-wrap">
                 {% url 'admin:index' as link %}
-                {% trans 'Home' as name %}
-                {% include 'unfold/helpers/breadcrumb_item.html' with link=link name=name %}
+                {% include 'unfold/helpers/breadcrumb_item.html' with link=link name='/' %}
 
-                {% url 'admin:formula_driver_changelist' as link %}
-                {% trans 'Drivers' as name %}
-                {% include 'unfold/helpers/breadcrumb_item.html' with link=link name=name %}
+                {% url 'admin:formula_room_changelist' as link %}
+                {% include 'unfold/helpers/breadcrumb_item.html' with link=link name='Комнаты' %}
 
                 {% trans 'Crispy formset' as name %}
                 {% include 'unfold/helpers/breadcrumb_item.html' with link='' name=name %}
@@ -27,9 +25,9 @@
 {% endblock %}
 
 {% block content %}
-    {% tab_list "drivers" %}
+    {% tab_list "rooms" %}
 
     <div class="flex flex-col gap-8">
-        {% crispy form driver_formset_helper "unfold_crispy" %}
+        {% crispy form room_formset_helper "unfold_crispy" %}
     </div>
 {% endblock %}

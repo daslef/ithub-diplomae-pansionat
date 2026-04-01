@@ -1,6 +1,6 @@
-# Formula - Django Unfold Admin Demo <!-- omit from toc -->
+# Django Unfold Admin Demo <!-- omit from toc -->
 
-The Formula repository contains a sample project build upon the Unfold theme for Django. It includes the best practices when it comes to Unfold but keep in mind that it does not incorporate any more in-depth business logic. Everything is composed just for demonstration purposes.
+Repository contains a sample project build upon the Unfold theme for Django. It includes the best practices when it comes to Unfold but keep in mind that it does not incorporate any more in-depth business logic. Everything is composed just for demonstration purposes.
 
 - [Unfold](https://github.com/unfoldadmin/django-unfold) - Admin theme for Django
 - [Turbo](https://github.com/unfoldadmin/turbo) - Django & Next.js starter kit including Unfold
@@ -42,8 +42,6 @@ docker compose exec web python manage.py loaddata formula/fixtures/*
 ```
 
 ## Compiling Styles
-
-When creating a custom admin dashboard, you are going to locate all your HTML code with Tailwind classes in your project, so newly added dashboard styles are not compiled. To do so, the first thing which is needed is to edit `UNFOLD` variable in `settings.py` and add `STYLES` key pointing at the new CSS stylesheet containing all new styles.
 
 ```python
 # settings.py

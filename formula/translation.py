@@ -1,8 +1,8 @@
 from modeltranslation.translator import TranslationOptions, register
 
-from formula.models import Circuit
+from formula.models import Room
 
 
-@register(Circuit)
-class CircuitTranslation(TranslationOptions):
-    fields = ["name"]
+@register(Room)
+class RoomTranslation(TranslationOptions):
+    pass

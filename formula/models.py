@@ -10,16 +10,9 @@ from simple_history.models import HistoricalRecords
 from formula.encoders import PrettyJSONEncoder
 
 
-class DriverStatus(models.TextChoices):
-    ACTIVE = "ACTIVE", _("Active")
-    INACTIVE = "INACTIVE", _("Inactive")
-
-
-class DriverCategory(models.TextChoices):
-    ROOKIE = "ROOKIE", _("Rookie")
-    EXPERIENCED = "EXPERIENCED", _("Experienced")
-    VETERAN = "VETERAN", _("Veteran")
-    CHAMPION = "CHAMPION", _("Champion")
+class ActivityCategory(models.TextChoices):
+    STANDARD = "STANDARD", _("Стандартный")
+    BEDRIDDEN = "BEDRIDDEN", _("Лежачий")
 
 
 class AuditedModel(models.Model):
@@ -30,30 +23,109 @@ class AuditedModel(models.Model):
         abstract = True
 
 
-class Tag(AuditedModel):
-    title = models.CharField(_("title"), max_length=255)
-    slug = models.CharField(_("slug"), max_length=255)
-    content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, verbose_name=_("content type")
+class Room(AuditedModel):
+    name = models.TextField(max_length=100)
+    category = models.CharField(
+        _("category"),
+        choices=ActivityCategory,
+        null=True,
+        blank=False,
+        max_length=255,
     )
-    object_id = models.PositiveIntegerField(_("object id"))
-    content_object = GenericForeignKey("content_type", "object_id")
-
-    def __str__(self):
-        return self.tag
+    price_per_day = MoneyField(max_digits=8, decimal_places=2, default_currency="RUB")
+    description = models.TextField(max_length=300)
+    picture = models.ImageField(_("picture"), null=True, blank=True, default=None)
+    history = HistoricalRecords()
+    is_active = models.BooleanField(default=True)
+    is_available = models.BooleanField(default=True)
 
     class Meta:
-        db_table = "tags"
-        verbose_name = _("tag")
-        verbose_name_plural = _("tags")
+        db_table = "rooms"
+        verbose_name = _("room")
+        verbose_name_plural = _("rooms")
+
+    def __str__(self):
+        return self.name
+
+
+class Client(AuditedModel):
+    first_name = models.CharField(_("first name"), max_length=255)
+    last_name = models.CharField(_("last name"), max_length=255)
+    middle_name = models.CharField(_("last name"), max_length=255)
+    category = models.CharField(
+        _("category"),
+        choices=ActivityCategory,
+        null=True,
+        blank=False,
+        max_length=255,
+    )
+    phone = models.TextField(max_length=50)
+    description = models.TextField(max_length=300)
+    document = models.FileField(_("document"), null=True, blank=True, default=None)
+    born_at = models.DateField(_("born"), null=True, blank=True)    
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = "clients"
+        verbose_name = "клиент"
+        verbose_name_plural = "клиенты"
+        permissions = (("update_statistics", _("Update statistics")),)
         indexes = [
-            models.Index(fields=["content_type", "object_id"]),
+            models.Index(fields=["category"]),
         ]
+
+
+    def __str__(self):
+        return self.full_name
+
+    @property
+    def full_name(self):
+        return f"{self.last_name} {self.first_name}, {self.middle_name}"
+
+    @property
+    def initials(self):
+        return f"{self.last_name} {self.first_name[0]}.{self.middle_name[0]}."
+    
+
+class Booking(AuditedModel):
+    room = models.ForeignKey(
+        "Room",
+        verbose_name=_("room"),
+        null=True,
+        blank=False,
+        on_delete=models.SET_NULL,
+    )
+    client = models.ForeignKey(
+        "Client",
+        verbose_name=_("client"),
+        null=True,
+        blank=False,
+        on_delete=models.SET_NULL,
+    )
+    responsible = models.ForeignKey(
+        "User",
+        verbose_name=_("responsible"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="booking_responsible",
+    )
+
+    class Meta:
+        db_table = "bookings"
+        verbose_name = _("booking")
+        verbose_name_plural = _("bookings")
+
+
+class BookingWithFilters(Booking):
+    history = HistoricalRecords()
+
+    class Meta:
+        proxy = True
 
 
 class User(AbstractUser, AuditedModel):
     biography = models.TextField(_("biography"), null=True, blank=True, default=None)
-    tags = GenericRelation(Tag)
 
     class Meta:
         db_table = "users"
@@ -86,166 +158,3 @@ class Profile(AuditedModel):
         db_table = "profiles"
         verbose_name = _("profile")
         verbose_name_plural = _("profiles")
-
-
-class Circuit(AuditedModel):
-    name = models.CharField(_("name"), max_length=255)
-    city = models.CharField(_("city"), max_length=255)
-    country = models.CharField(_("country"), max_length=255)
-    data = models.JSONField(_("data"), null=True, blank=True)
-    weight = models.PositiveIntegerField(_("weight"), default=0, db_index=True)
-
-    class Meta:
-        db_table = "circuits"
-        verbose_name = _("circuit")
-        verbose_name_plural = _("circuits")
-        ordering = ["weight"]
-
-    def __str__(self):
-        return self.name
-
-
-class Driver(AuditedModel):
-    first_name = models.CharField(_("first name"), max_length=255)
-    last_name = models.CharField(_("last name"), max_length=255)
-    salary = MoneyField(
-        max_digits=14, decimal_places=2, null=True, blank=True, default_currency=None
-    )
-    category = models.CharField(
-        _("category"),
-        choices=DriverCategory,
-        null=True,
-        blank=True,
-        max_length=255,
-    )
-    picture = models.ImageField(_("picture"), null=True, blank=True, default=None)
-    born_at = models.DateField(_("born"), null=True, blank=True)
-    last_race_at = models.DateField(_("last race"), null=True, blank=True)
-    best_time = models.TimeField(_("best time"), null=True, blank=True)
-    first_race_at = models.DateTimeField(_("first race"), null=True, blank=True)
-    resume = models.FileField(_("resume"), null=True, blank=True, default=None)
-    author = models.ForeignKey(
-        "User",
-        verbose_name=_("author"),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
-    editor = models.ForeignKey(
-        "User",
-        verbose_name=_("editor"),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="driver_editor",
-    )
-    constructors = models.ManyToManyField(
-        "Constructor", verbose_name=_("constructors"), blank=True
-    )
-    code = models.CharField(_("code"), max_length=3)
-    color = models.CharField(_("color"), null=True, blank=True, max_length=255)
-    link = models.URLField(_("link"), null=True, blank=True)
-    status = models.CharField(
-        _("status"),
-        choices=DriverStatus,
-        null=True,
-        blank=True,
-        max_length=255,
-    )
-    conditional_field_active = models.CharField(
-        _("conditional field active"),
-        null=True,
-        blank=True,
-        max_length=255,
-        help_text="This field is only visible if the status is ACTIVE",
-    )
-    conditional_field_inactive = models.CharField(
-        _("conditional field inactive"),
-        null=True,
-        blank=True,
-        max_length=255,
-        help_text="This field is only visible if the status is INACTIVE",
-    )
-    data = models.JSONField(_("data"), null=True, blank=True, encoder=PrettyJSONEncoder)
-    history = HistoricalRecords()
-    is_active = models.BooleanField(_("active"), default=False)
-    is_retired = models.BooleanField(
-        _("retired"),
-        choices=(
-            (None, ""),
-            (True, _("Active")),
-            (False, _("Inactive")),
-        ),
-        null=True,
-    )
-    is_hidden = models.BooleanField(_("hidden"), default=False)
-
-    class Meta:
-        db_table = "drivers"
-        verbose_name = _("driver")
-        verbose_name_plural = _("drivers")
-        permissions = (("update_statistics", _("Update statistics")),)
-
-    def __str__(self):
-        return self.full_name
-
-    @property
-    def full_name(self):
-        if self.first_name and self.last_name:
-            return f"{self.last_name}, {self.first_name}"
-
-        return None
-
-    @property
-    def initials(self):
-        if self.first_name and self.last_name:
-            return f"{self.first_name[0]}{self.last_name[0]}"
-
-        return None
-
-
-class DriverWithFilters(Driver):
-    history = HistoricalRecords()
-
-    class Meta:
-        proxy = True
-
-
-class Constructor(AuditedModel):
-    name = models.CharField(_("name"), max_length=255)
-    weight = models.PositiveIntegerField(_("weight"), default=0, db_index=True)
-
-    class Meta:
-        db_table = "constructors"
-        verbose_name = _("constructor")
-        verbose_name_plural = _("constructors")
-        ordering = ["weight"]
-
-    def __str__(self):
-        return self.name
-
-
-class Race(AuditedModel):
-    circuit = models.ForeignKey(
-        Circuit, verbose_name=_("circuit"), on_delete=models.PROTECT
-    )
-    winner = models.ForeignKey(
-        Driver, verbose_name=_("winner"), on_delete=models.PROTECT
-    )
-    picture = models.ImageField(_("picture"), null=True, blank=True, default=None)
-    year = models.PositiveIntegerField(_("year"))
-    laps = models.PositiveIntegerField(_("laps"))
-    date = models.DateField(_("date"))
-    weight = models.PositiveIntegerField(_("weight"), default=0, db_index=True)
-
-    class Meta:
-        db_table = "races"
-        verbose_name = _("race")
-        verbose_name_plural = _("races")
-        ordering = ["weight"]
-
-    def __str__(self):
-        return f"{self.circuit.name}, {self.year}"
-
-    def get_absolute_url(self):
-        return "https://example.com"

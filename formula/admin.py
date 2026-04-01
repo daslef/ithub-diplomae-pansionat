@@ -59,7 +59,6 @@ from unfold.paginator import InfinitePaginator
 from unfold.sections import TableSection, TemplateSection
 from unfold.widgets import (
     UnfoldAdminCheckboxSelectMultiple,
-    UnfoldAdminColorInputWidget,
     UnfoldAdminSelect2Widget,
     UnfoldAdminSelectWidget,
     UnfoldAdminSplitDateTimeWidget,
@@ -67,26 +66,24 @@ from unfold.widgets import (
 )
 
 from formula.models import (
-    Circuit,
-    Constructor,
-    Driver,
-    DriverCategory,
-    DriverStatus,
-    DriverWithFilters,
+    Room,
+    Client,
+    Booking,
+    BookingWithFilters,
+    ActivityCategory,
     Profile,
-    Race,
-    Tag,
     User,
 )
-from formula.resources import AnotherConstructorResource, ConstructorResource
+
+from formula.resources import RoomResource, AnotherRoomResource
 from formula.views import CrispyFormsetView, CrispyFormView
 
 admin.site.unregister(Group)
 
 
-class CircuitNonrelatedStackedInline(NonrelatedStackedInline):
-    model = Circuit
-    fields = ["name", "city", "country"]
+class RoomNonrelatedStackedInline(NonrelatedStackedInline):
+    model = Room
+    fields = ["name", "category", "price_per_day"]
     extra = 1
     tab = True
     per_page = 10
@@ -98,74 +95,16 @@ class CircuitNonrelatedStackedInline(NonrelatedStackedInline):
         pass
 
 
-class TagGenericTabularInline(GenericStackedInline):
-    model = Tag
-
-
-class UserDriverTabularInline(TabularInline):
-    model = Driver
-    fk_name = "author"
-    # autocomplete_fields = ["standing"]
-    fields = ["first_name", "last_name", "code", "status", "salary", "category"]
+# class UserDriverTabularInline(TabularInline):
+#     model = Driver
+#     fk_name = "editor"
+#     # autocomplete_fields = ["standing"]
+#     fields = ["first_name", "last_name", "code", "status", "salary", "category"]
 
 
 class UserProfileTabularInline(TabularInline):
     model = Profile
     fields = ["user", "picture", "resume", "link"]
-
-
-class CircuitDatasetAdmin(ModelAdmin):
-    list_display = ["name", "city", "country"]
-    search_fields = ["name", "city", "country"]
-    actions = [
-        "some_action",
-    ]
-
-    def some_action(self, request, queryset):
-        messages.success(request, "Selected circuits have been successfully updated.")
-        return redirect(request.headers.get("referer"))
-
-    def get_queryset(self, request):
-        obj = self.extra_context.get("object")
-
-        if not obj:
-            return super().get_queryset(request).none()
-
-        return super().get_queryset(request)
-
-
-class CircuitDataset(BaseDataset):
-    model = Circuit
-    model_admin = CircuitDatasetAdmin
-    tab = True
-
-
-class ConstructorDatasetAdmin(ModelAdmin):
-    list_display = ["name"]
-    search_fields = ["name"]
-    actions = [
-        "some_action",
-    ]
-
-    def some_action(self, request, queryset):
-        messages.success(
-            request, "Selected constructors have been successfully updated."
-        )
-        return redirect(request.headers.get("referer"))
-
-    def get_queryset(self, request):
-        obj = self.extra_context.get("object")
-
-        if not obj:
-            return super().get_queryset(request).none()
-
-        return super().get_queryset(request)
-
-
-class ConstructorDataset(BaseDataset):
-    model = Constructor
-    model_admin = ConstructorDatasetAdmin
-    # tab = True
 
 
 @admin.register(User)
@@ -182,14 +121,10 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     ]
     list_filter_submit = True
     list_filter_sheet = False
-    change_form_datasets = [
-        CircuitDataset,
-        ConstructorDataset,
-    ]
+    change_form_datasets = []
     inlines = [
-        CircuitNonrelatedStackedInline,
-        TagGenericTabularInline,
-        UserDriverTabularInline,
+        RoomNonrelatedStackedInline,
+        # UserDriverTabularInline,
         UserProfileTabularInline,
     ]
     compressed_fields = True
@@ -203,14 +138,14 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     fieldsets = (
         (None, {"fields": ("username", "password")}),
         (
-            _("Personal info"),
+            "Личная информация",
             {
                 "fields": (("first_name", "last_name"), "email", "biography"),
                 "classes": ["tab"],
             },
         ),
         (
-            _("Permissions"),
+            "Права",
             {
                 "fields": (
                     "is_active",
@@ -223,7 +158,7 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
             },
         ),
         (
-            _("Important dates"),
+            "Даты",
             {
                 "fields": ("last_login", "date_joined"),
                 "classes": ["tab"],
@@ -262,123 +197,53 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
 @admin.register(Group)
 class GroupAdmin(BaseGroupAdmin, ModelAdmin):
     def changelist_view(self, request, extra_context=None):
-        messages.success(
-            request,
-            _(
-                "Donec tristique risus ut lobortis consequat. Vestibulum ac volutpat magna. Quisque dictum mauris a rutrum tincidunt. "
-            ),
-        )
-        messages.info(
-            request,
-            _(
-                "Donec tristique risus ut lobortis consequat. Vestibulum ac volutpat magna. Quisque dictum mauris a rutrum tincidunt. "
-            ),
-        )
-        messages.warning(
-            request,
-            _(
-                "Donec tristique risus ut lobortis consequat. Vestibulum ac volutpat magna. Quisque dictum mauris a rutrum tincidunt. "
-            ),
-        )
-        messages.error(
-            request,
-            _(
-                "Donec tristique risus ut lobortis consequat. Vestibulum ac volutpat magna. Quisque dictum mauris a rutrum tincidunt. "
-            ),
-        )
         return super().changelist_view(request, extra_context=extra_context)
 
 
-class CircuitRaceInline(TabularInline):
-    model = Race
-    autocomplete_fields = ["winner"]
-    fields = ["winner", "year", "laps", "date", "weight"]
-    ordering_field = "weight"
-    extra = 0
-    show_change_link = True
+# class DriverTableSection(TableSection):
+#     related_name = "race_set"
+#     fields = ["winner", "laps", "date"]
 
 
-@admin.register(Circuit)
-class CircuitAdmin(ModelAdmin, TabbedTranslationAdmin):
-    show_facets = admin.ShowFacets.ALLOW
-    search_fields = ["name", "city", "country"]
-    list_display = ["name", "city", "country"]
-    list_filter = ["country"]
-    inlines = [CircuitRaceInline]
-    ordering_field = "weight"
+# class CircuitRaceInline(TabularInline):
+#     model = Race
+#     autocomplete_fields = ["winner"]
+#     fields = ["winner", "year", "laps", "date"]
+#     ordering_field = "weight"
+#     extra = 0
+#     show_change_link = True
+
+
+@admin.register(Room)
+class RoomAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionModelAdmin):
+    show_facets = False
+    search_fields = ["name", "description"]
+    list_display = ["name", "category", "price_per_day", "is_active", "is_available"]
+    list_filter = ["category", "is_active", "is_available"]
+    # inlines = [CircuitRaceInline]
+    ordering_field = "name"
     hide_ordering_field = True
     compressed_fields = True
 
 
-class DriverTableSection(TableSection):
-    related_name = "driver_set"
-    fields = ["first_name", "last_name", "code"]
-
-
-@admin.register(Constructor)
-class ConstructorAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionModelAdmin):
-    search_fields = ["name"]
-    list_display = ["name"]
-    list_sections = [DriverTableSection]
-    resource_classes = [ConstructorResource, AnotherConstructorResource]
+    # list_sections = [DriverTableSection] # hihi
+    resource_classes = [RoomResource, AnotherRoomResource]
     save_as = True
     import_form_class = ImportForm
     export_form_class = ExportForm
     export_form_class = SelectableFieldsExportForm
-    ordering_field = "weight"
-    hide_ordering_field = True
 
-    actions_list = []
-    actions_row = [
-        "custom_actions_row",
-        "custom_actions_row2",
-        "custom_actions_row3"
-    ]
     actions_detail = ["custom_actions_detail"]
     actions_submit_line = ["custom_actions_submit_line"]
 
-    @action(
-        description=_("Rebuild Index"),
-        url_path="actions-row-custom-url",
-        permissions=[
-            "custom_actions_row",
-            "another_custom_actions_row",
-        ],
-    )
-    def custom_actions_row(self, request, object_id):
-        messages.success(
-            request, f"Row action has been successfully executed. Object ID {object_id}"
-        )
-        return redirect(
-            request.headers.get("referer")
-            or reverse_lazy("admin:formula_constructor_changelist")
-        )
-
-    def has_custom_actions_row_permission(self, request, object_id=None):
-        return request.user.is_superuser
-
-    def has_another_custom_actions_row_permission(self, request, object_id=None):
-        return request.user.is_staff
-
-    @action(description=_("Reindex Cache"), url_path="actions-row-reindex-cache")
-    def custom_actions_row2(self, request, object_id):
-        messages.success(
-            request, f"Row action has been successfully executed. Object ID {object_id}"
-        )
-        return redirect(
-            request.headers.get("referer")
-            or reverse_lazy("admin:formula_constructor_changelist")
-        )
-
-    @action(description=_("Deploy Hypervisor"), url_path="actions-row-hyperdrive")
-    def custom_actions_row3(self, request, object_id):
-        messages.success(
-            request, f"Row action has been successfully executed. Object ID {object_id}"
-        )
-        return redirect(
-            request.headers.get("referer")
-            or reverse_lazy("admin:formula_constructor_changelist")
-        )
+    def get_urls(self):
+        return super().get_urls() + [
+            path(
+                "crispy-with-formset",
+                self.admin_site.admin_view(CrispyFormsetView.as_view(model_admin=self)),
+                name="crispy_formset",
+            ),
+        ]
 
     @action(
         description="Custom detail action",
@@ -431,40 +296,30 @@ class FullNameFilter(TextFilter):
         )
 
 
-class RaceWinnerInline(StackedInline):
-    model = Race
-    fields = ["winner", "year", "laps", "picture", "weight"]
-    readonly_fields = ["winner", "year", "laps"]
-    ordering_field = "weight"
-    extra = 0
-    per_page = 15
-    tab = True
+# class RaceWinnerInline(StackedInline):
+#     model = Race
+#     fields = ["winner", "year", "laps", "picture"]
+#     readonly_fields = ["winner", "year", "laps"]
+#     ordering_field = "weight"
+#     extra = 0
+#     per_page = 15
+#     tab = True
 
 
-class DriverAdminForm(forms.ModelForm):
-    flags = forms.MultipleChoiceField(
-        label=_("Flags"),
-        choices=[
-            ("POPULAR", _("Popular")),
-            ("FASTEST", _("Fastest")),
-            ("TALENTED", _("Talented")),
-        ],
-        required=False,
-        widget=UnfoldAdminCheckboxSelectMultiple,
-    )
+class ClientAdminForm(forms.ModelForm):
+    # flags = forms.MultipleChoiceField(
+    #     label=_("Flags"),
+    #     choices=[
+    #         ("POPULAR", _("Popular")),
+    #         ("FASTEST", _("Fastest")),
+    #         ("TALENTED", _("Talented")),
+    #     ],
+    #     required=False,
+    #     widget=UnfoldAdminCheckboxSelectMultiple,
+    # )
     first_name = forms.CharField(
         label=_("First name"),
         widget=UnfoldAdminTextInputWidget,
-    )
-    # Custom select field for DriverAdminForm
-    custom_select = forms.ChoiceField(
-        label=_("Conditional select"),
-        choices=[
-            ("show", _("Show conditional field")),
-            ("hide", _("Hide conditional field")),
-        ],
-        required=False,
-        widget=UnfoldAdminSelect2Widget,
     )
     custom_text_input = forms.CharField(
         label=_("Custom Text Input"),
@@ -484,47 +339,39 @@ class DriverAdminForm(forms.ModelForm):
 
 
 class ChartSection(TemplateSection):
-    template_name = "formula/driver_section.html"
+    template_name = "formula/client_section.html"
 
 
-class DriverAdminMixin(DjangoQLSearchMixin, ModelAdmin):
+class ClientAdminMixin(DjangoQLSearchMixin, ModelAdmin):
     list_horizontal_scrollbar_top = True
     list_sections = [ChartSection]
     # list_sections_classes = "lg:grid-cols-2"
-    form = DriverAdminForm
+    form = ClientAdminForm
     history_list_per_page = 10
-    search_fields = ["last_name", "first_name", "code"]
+    search_fields = ["last_name", "first_name"]
     warn_unsaved_form = True
     compressed_fields = True
     list_display = [
-        "display_header",
-        "display_constructor",
-        "display_total_wins",
+        "display_description",
         "display_category",
-        "display_status",
-        "display_code",
-        "is_active",
+        # "is_active",
     ]
-    inlines = [
-        RaceWinnerInline,
+    actions_row = [
+        "custom_actions_row",
+        "custom_actions_row2",
     ]
-    conditional_fields = {
-        "conditional_field_active": "status == 'ACTIVE'",
-        "conditional_field_inactive": "status == 'INACTIVE'",
-        "custom_text_input": "custom_select == 'show'",
-    }
-    autocomplete_fields = [
-        "constructors",
-        "editor",
-    ]
-    radio_fields = {
-        "status": admin.VERTICAL,
-    }
+
+    # inlines = [RaceWinnerInline]
+    
+    # autocomplete_fields = [
+    #     "editor",
+    # ]
+    # radio_fields = {
+    #     "status": admin.VERTICAL,
+    # }
     readonly_fields = [
-        # "author",
         # "picture",
         # "resume",
-        "data",
     ]
     list_before_template = "formula/driver_list_before.html"
     change_form_show_cancel_button = True
@@ -533,7 +380,6 @@ class DriverAdminMixin(DjangoQLSearchMixin, ModelAdmin):
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, change, **kwargs)
-        form.base_fields["color"].widget = UnfoldAdminColorInputWidget()
         form.base_fields["first_name"].widget = UnfoldAdminTextInputWidget(
             attrs={
                 "class": "first-name-input",
@@ -541,110 +387,68 @@ class DriverAdminMixin(DjangoQLSearchMixin, ModelAdmin):
         )
         return form
 
-    def get_queryset(self, request):
-        return (
-            super()
-            .get_queryset(request)
-            .prefetch_related(
-                "constructors",
-                "race_set",
-                "race_set__circuit",
-            )
+    # def get_queryset(self, request):
+    #     return (
+    #         super()
+    #         .get_queryset(request)
+    #         .prefetch_related(
+    #             "race_set",
+    #             "race_set__circuit",
+    #         )
+    #     )
+
+    @display(
+        description="Категория",
+        label={
+            ActivityCategory.BEDRIDDEN: "danger",
+            ActivityCategory.STANDARD: "success",
+        },
+    )
+    def display_category(self, instance: Client):
+        return str(instance.category)
+
+
+    @display(description="Описание", label=True)
+    def display_description(self, instance: Client):
+        return instance.description
+
+    @action(
+        description=_("Rebuild Index"),
+        url_path="actions-row-custom-url",
+        permissions=[
+            "custom_actions_row",
+            "another_custom_actions_row",
+        ],
+    )
+    def custom_actions_row(self, request, object_id):
+        messages.success(
+            request, f"Row action has been successfully executed. Object ID {object_id}"
+        )
+        return redirect(
+            request.headers.get("referer")
+            or reverse_lazy("admin:formula_constructor_changelist")
         )
 
-    @display(description=_("Driver"), header=True)
-    def display_header(self, instance: Driver) -> list:
-        return [
-            instance.full_name,
-            None,
-            instance.initials,
-            {
-                "path": static("formula/images/avatar.jpg"),
-                "height": 24,
-                "width": 24,
-                "borderless": True,
-                # "squared": True,
-            },
-        ]
+    def has_custom_actions_row_permission(self, request, object_id=None):
+        return request.user.is_superuser
 
-    @display(description=_("Constructor"), dropdown=True)
-    def display_constructor(self, instance: Driver):
-        total = instance.constructors.all().count()
-        items = []
+    def has_another_custom_actions_row_permission(self, request, object_id=None):
+        return request.user.is_staff
 
-        for constructor in instance.constructors.all():
-            title = format_html(
-                """
-                <div class="flex flex-row gap-2 items-center">
-                    <span class="truncate">{}</span>
-                    <a href="" class="leading-none ml-auto">
-                        <span class="material-symbols-outlined leading-none text-base-500">ungroup</span>
-                    </a>
-                </div>
-                """,
-                constructor.name,
-            )
-            items.append(
-                {
-                    "title": title,
-                    # "link": "#",  # Optional: Add a href attribute
-                }
-            )
-
-        # Display custom string if no records found
-        if total == 0:
-            return "-"
-
-        return {
-            "title": f"{total} contructors",
-            "items": items,
-            "striped": True,
-            "height": 600,
-            "max_height": 200,
-            # "height": 202,  # Optional, max line height 30px
-            # "width": 320,  # Optional
-        }
-
-    @display(description=_("Total points"), ordering="total_points")
-    def display_total_points(self, instance: Driver):
-        return instance.total_points
-
-    @display(description=_("Total wins"))
-    def display_total_wins(self, instance: Driver):
-        return instance.race_set.count()
-
-    @display(
-        description=_("Category"),
-        label={
-            DriverCategory.ROOKIE: "danger",
-            DriverCategory.EXPERIENCED: "warning",
-            DriverCategory.VETERAN: "info",
-            DriverCategory.CHAMPION: "success",
-        },
-    )
-    def display_category(self, instance: Driver):
-        return instance.category
-
-    @display(
-        description=_("Status"),
-        label={
-            DriverStatus.INACTIVE: "danger",
-            DriverStatus.ACTIVE: "success",
-        },
-    )
-    def display_status(self, instance: Driver):
-        if instance.status:
-            return instance.status
-
-        return None
-
-    @display(description=_("Code"), label=True)
-    def display_code(self, instance: Driver):
-        return instance.code
+    @action(description=_("Reindex Cache"), url_path="actions-row-reindex-cache")
+    def custom_actions_row2(self, request, object_id):
+        messages.success(
+            request, f"Row action has been successfully executed. Object ID {object_id}"
+        )
+        return redirect(
+            request.headers.get("referer")
+            or reverse_lazy("admin:formula_constructor_changelist")
+        )
 
 
-@admin.register(Driver)
-class DriverAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DriverAdminMixin):
+
+@admin.register(Client)
+class ClientAdmin(GuardedModelAdmin, SimpleHistoryAdmin, ClientAdminMixin):
     fieldsets = [
         (
             None,
@@ -652,64 +456,53 @@ class DriverAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DriverAdminMixin):
                 "fields": [
                     "first_name",
                     "last_name",
-                    "salary",
+                    "middle_name",
                     "category",
-                    "picture",
-                    "resume",
+                    "phone",
+                    "description",
                     "born_at",
-                    "last_race_at",
-                    "best_time",
-                    "first_race_at",
-                    "author",
-                    "editor",
-                    "constructors",
-                    "code",
-                    "color",
-                    "link",
-                    "data",
                 ]
             },
         ),
-        (
-            _("Conditional fields"),
-            {
-                "classes": ["tab"],
-                "fields": [
-                    "status",
-                    "conditional_field_active",
-                    "conditional_field_inactive",
-                    "custom_select",
-                    "custom_text_input",
-                ],
-            },
-        ),
-        (
-            _("Boolean fields"),
-            {
-                "classes": ["tab"],
-                "fields": [
-                    "is_retired",
-                    "is_active",
-                    "is_hidden",
-                ],
-            },
-        ),
+    #     (
+    #         _("Boolean fields"),
+    #         {
+    #             "classes": ["tab"],
+    #             "fields": [
+    #                 "is_active",
+    #             ],
+    #         },
+    #     ),
     ]
-    actions_list = [
-        "changelist_action1",
-        "changelist_action5",
-    ]
-    actions_detail = [
-        "change_detail_action",
-    ]
+
+    actions_list = ["changelist_action1"]
+    actions_detail = ["change_detail_action",]
+
+#     date_hierarchy = "date"
+#     search_fields = [
+#         "circuit__name",
+#         "circuit__city",
+#         "circuit__country",
+#         "winner__first_name",
+#         "winner__last_name",
+#     ]
+#     list_filter = [
+#         ("circuit", RelatedCheckboxFilter),
+#         ("year", RangeNumericFilter),
+#         ("laps", SingleNumericFilter),
+#         ("date", RangeDateFilter),
+#         ("created_at", RangeDateTimeFilter),
+#     ]
+#     list_filter_sheet = False
+#     list_filter_submit = True
+#     raw_id_fields = ["circuit", "winner"]
+#     list_display = ["circuit", "winner", "year", "laps", "date"]
+#     list_fullwidth = True
+#     autocomplete_fields = ["circuit", "winner"]
+
 
     def get_urls(self):
         return super().get_urls() + [
-            path(
-                "crispy-with-formset",
-                self.admin_site.admin_view(CrispyFormsetView.as_view(model_admin=self)),
-                name="crispy_formset",
-            ),
             path(
                 "crispy-form",
                 self.admin_site.admin_view(CrispyFormView.as_view(model_admin=self)),
@@ -722,14 +515,7 @@ class DriverAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DriverAdminMixin):
         messages.success(
             request, _("Changelist action has been successfully executed.")
         )
-        return redirect(reverse_lazy("admin:formula_driver_changelist"))
-
-    @action(description=_("Optimize queries"), icon="database")
-    def changelist_action5(self, request):
-        messages.success(
-            request, _("Changelist action has been successfully executed.")
-        )
-        return redirect(reverse_lazy("admin:formula_driver_changelist"))
+        return redirect(reverse_lazy("admin:formula_client_changelist"))
 
     @action(
         description=_("Action with form"),
@@ -742,7 +528,7 @@ class DriverAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DriverAdminMixin):
         except (TypeError, ValueError) as e:
             raise Http404 from e
 
-        object = get_object_or_404(Driver, pk=object_id)
+        object = get_object_or_404(Client, pk=object_id)
 
         class SomeForm(forms.Form):
             # It is important to set a widget coming from Unfold
@@ -771,12 +557,12 @@ class DriverAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DriverAdminMixin):
             messages.success(request, _("Change detail action has been successful."))
 
             return redirect(
-                reverse_lazy("admin:formula_driver_change", args=[object_id])
+                reverse_lazy("admin:formula_client_change", args=[object_id])
             )
 
         return render(
             request,
-            "formula/driver_action.html",
+            "formula/client_action.html",
             {
                 "form": form,
                 "object": object,
@@ -793,7 +579,7 @@ class DriverAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DriverAdminMixin):
         messages.success(
             request, _("Change detail action has been successfully executed.")
         )
-        return redirect(reverse_lazy("admin:formula_driver_change", args=[object_id]))
+        return redirect(reverse_lazy("admin:formula_client_change", args=[object_id]))
 
     def has_revalidate_cache_permission(self, request, object_id):
         return request.user.is_superuser
@@ -803,28 +589,15 @@ class DriverAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DriverAdminMixin):
         messages.success(
             request, _("Change detail action has been successfully executed.")
         )
-        return redirect(reverse_lazy("admin:formula_driver_change", args=[object_id]))
-
-    @action(
-        description=_("Never visible"),
-        permissions=["change_detail_false"],
-    )
-    def change_detail_action3(self, request, object_id):
-        messages.success(
-            request, _("Change detail action has been successfully executed.")
-        )
-        return redirect(reverse_lazy("admin:formula_driver_change", args=[object_id]))
-
-    def has_change_detail_false_permission(self, request, object_id=None):
-        return False
+        return redirect(reverse_lazy("admin:formula_client_change", args=[object_id]))
 
 
-class DriverCustomCheckboxFilter(CheckboxFilter):
+class ClientCustomCheckboxFilter(CheckboxFilter):
     title = _("Custom status")
     parameter_name = "custom_status"
 
     def lookups(self, request, model_admin):
-        return DriverStatus.choices
+        return ActivityCategory.choices
 
     def queryset(self, request, queryset):
         if self.value() not in EMPTY_VALUES:
@@ -839,58 +612,32 @@ class SalarySliderNumericFilter(SliderNumericFilter):
     MAX_DECIMALS = 2
 
 
-@admin.register(DriverWithFilters)
-class DriverWithFiltersAdmin(DriverAdminMixin):
+@admin.register(BookingWithFilters)
+class BookingWithFiltersAdmin(ClientAdminMixin):
     list_fullwidth = True
     list_filter = [
         FullNameFilter,
-        ("constructors", AutocompleteSelectMultipleFilter),
-        ("race__circuit", RelatedDropdownFilter),
-        ("salary", SalarySliderNumericFilter),
-        ("status", ChoicesCheckboxFilter),
-        ("category", AllValuesCheckboxFilter),
-        DriverCustomCheckboxFilter,
-        ("is_hidden", BooleanRadioFilter),
+        # ("constructors", AutocompleteSelectMultipleFilter),
+        ("room__name", RelatedDropdownFilter),
+        # ("salary", SalarySliderNumericFilter),
+        ("room__category", ChoicesCheckboxFilter),
+        # ("category", AllValuesCheckboxFilter),
+        # DriverCustomCheckboxFilter,
         ("is_active", BooleanRadioFilter),
     ]
     list_filter_sheet = False
     list_filter_submit = True
 
 
-@admin.register(Race)
-class RaceAdmin(ModelAdmin):
-    date_hierarchy = "date"
-    search_fields = [
-        "circuit__name",
-        "circuit__city",
-        "circuit__country",
-        "winner__first_name",
-        "winner__last_name",
-    ]
-    list_filter = [
-        ("circuit", RelatedCheckboxFilter),
-        ("year", RangeNumericFilter),
-        ("laps", SingleNumericFilter),
-        ("date", RangeDateFilter),
-        ("created_at", RangeDateTimeFilter),
-    ]
-    list_filter_sheet = False
-    list_filter_submit = True
-    raw_id_fields = ["circuit", "winner"]
-    list_display = ["circuit", "winner", "year", "laps", "date"]
-    list_fullwidth = True
-    autocomplete_fields = ["circuit", "winner"]
-
-
 @register_component
-class DriverActiveComponent(BaseComponent):
+class ClientActiveComponent(BaseComponent):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         context["children"] = render_to_string(
             "formula/helpers/kpi_progress.html",
             {
-                "total": Driver.objects.filter(status=DriverStatus.ACTIVE).count(),
+                "total": Client.objects.filter(category=ActivityCategory.STANDARD).count(),
                 "progress": "positive",
                 "percentage": "2.8%",
             },
@@ -899,14 +646,14 @@ class DriverActiveComponent(BaseComponent):
 
 
 @register_component
-class DriverInactiveComponent(BaseComponent):
+class ClientInactiveComponent(BaseComponent):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         context["children"] = render_to_string(
             "formula/helpers/kpi_progress.html",
             {
-                "total": Driver.objects.filter(status=DriverStatus.INACTIVE).count(),
+                "total": Client.objects.filter(category=ActivityCategory.BEDRIDDEN).count(),
                 "progress": "negative",
                 "percentage": "-12.8%",
             },
@@ -930,14 +677,14 @@ class DriverTotalPointsComponent(BaseComponent):
 
 
 @register_component
-class DriverRacesComponent(BaseComponent):
+class ClientBookingsComponent(BaseComponent):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         context["children"] = render_to_string(
             "formula/helpers/kpi_progress.html",
             {
-                "total": Race.objects.count(),
+                "total": Booking.objects.count(),
                 "progress": "negative",
                 "percentage": "-10.0%",
             },
@@ -946,7 +693,7 @@ class DriverRacesComponent(BaseComponent):
 
 
 @register_component
-class DriverSectionChangeComponent(BaseComponent):
+class BookingSectionChangeComponent(BaseComponent):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         WEEKDAYS = [

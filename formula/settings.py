@@ -162,7 +162,6 @@ USE_I18N = True
 USE_TZ = True
 
 LANGUAGES = (
-    ("de", _("German")),
     ("en", _("English")),
 )
 
@@ -222,20 +221,18 @@ STORAGES = {
 # Unfold
 ######################################################################
 UNFOLD = {
-    "SITE_TITLE": _("Formula Admin"),
-    "SITE_HEADER": _("Formula Admin"),
-    "SITE_SUBHEADER": _("Unfold demo project"),
+    "SITE_TITLE": "Пансионат",
+    "SITE_HEADER": "Админка",
+    "SITE_SUBHEADER": "Пансионат",
     "SITE_SYMBOL": "dashboard",
     "SITE_ICON": lambda request: static("formula/images/logo.svg"),
     # "SITE_URL": None,
     # "SHOW_HISTORY": True,
-    "SHOW_LANGUAGES": True,
+    "SHOW_LANGUAGES": False,
     "LANGUAGE_FLAGS": {
-        "de": "🇩🇪",
         "en": "🇺🇸",
     },
     "ENVIRONMENT": "formula.utils.environment_callback",
-    # "DASHBOARD_CALLBACK": "formula.views.dashboard_callback",
     "LOGIN": {
         "image": lambda request: static("formula/images/login-bg.jpg"),
         "form": "formula.forms.LoginForm",
@@ -248,102 +245,87 @@ UNFOLD = {
     ],
     "TABS": [
         {
-            "models": [
-                "formula.race",
-                "formula.constructor",
-            ],
+            "page": "clients",
+            "models": ["formula.client"],
             "items": [
                 {
-                    "title": _("Races"),
-                    "link": reverse_lazy("admin:formula_race_changelist"),
-                },
-                {
-                    "title": _("Constructors"),
-                    "link": reverse_lazy("admin:formula_constructor_changelist"),
-                },
-            ],
-        },
-        {
-            "page": "drivers",
-            "models": ["formula.driver"],
-            "items": [
-                {
-                    "title": _("Drivers"),
-                    "link": reverse_lazy("admin:formula_driver_changelist"),
+                    "title": "Заявки",
+                    "link": reverse_lazy("admin:formula_client_changelist"),
                     "active": lambda request: request.path
-                    == reverse_lazy("admin:formula_driver_changelist")
+                    == reverse_lazy("admin:formula_client_changelist")
                     and "status__exact" not in request.GET,
                 },
                 {
-                    "title": _("Active drivers"),
+                    "title": "Необработанные",
                     "link": lambda request: f"{
-                        reverse_lazy('admin:formula_driver_changelist')
+                        reverse_lazy('admin:formula_client_changelist')
                     }?status__exact=ACTIVE",
                 },
                 {
                     "title": _("Crispy Form"),
                     "link": reverse_lazy("admin:crispy_form"),
                 },
+            ],
+        },
                 {
-                    "title": _("Crispy Formset"),
+            "page": "rooms",
+            "models": ["formula.room"],
+            "items": [
+                {
+                    "title": "Список комнат",
+                    "link": reverse_lazy("admin:formula_room_changelist"),
+                    "active": lambda request: request.path
+                    == reverse_lazy("admin:formula_room_changelist"),
+                },
+                {
+                    "title": "Быстрое редактирование",
                     "link": reverse_lazy("admin:crispy_formset"),
                 },
             ],
         },
     ],
-    # "COMMAND": {
-    #     "search_models": "formula.utils.search_models_callback",
-    #     "show_history": "formula.utils.show_history_callback",
-    # },
     "SIDEBAR": {
         "show_search": False,
         "show_all_applications": False,
         "command_search": False,
         "navigation": [
             {
-                "title": _("Navigation"),
+                "title": _("Ресурсы"),
                 "items": [
                     {
-                        "title": _("Drivers"),
+                        "title": "Заявки",
                         "icon": "sports_motorsports",
-                        "active": "formula.utils.driver_list_link_callback",
-                        "link": reverse_lazy("admin:formula_driver_changelist"),
-                    },
-                    {
-                        "title": _("Circuits"),
-                        "icon": "sports_score",
-                        "link": reverse_lazy("admin:formula_circuit_changelist"),
-                    },
-                    {
-                        "title": _("Races"),
-                        "icon": "stadium",
-                        "link": reverse_lazy("admin:formula_race_changelist"),
+                        "active": "formula.utils.client_list_link_callback",
+                        "link": reverse_lazy("admin:formula_client_changelist"),
                         "badge": "formula.utils.badge_callback",
                         "badge_variant": "danger",
                         "badge_style": "solid",
                     },
                     {
-                        "title": _("Constance"),
-                        "icon": "settings",
-                        "link": reverse_lazy("admin:constance_config_changelist"),
-                        "badge": _("New"),
-                        "badge_variant": "primary",
+                        "title": "Комнаты",
+                        "icon": "sports_score",
+                        "link": reverse_lazy("admin:formula_room_changelist"),
                     },
                 ],
             },
             {
-                "title": _("Users & Groups"),
-                "collapsible": True,
+                "title": "Администрирование",
+                "collapsible": False,
                 "items": [
                     {
-                        "title": _("Users"),
+                        "title": "Сотрудники",
                         "icon": "account_circle",
                         "link": reverse_lazy("admin:formula_user_changelist"),
                     },
                     {
-                        "title": _("Groups"),
+                        "title": "Группы",
                         "icon": "group",
                         "link": reverse_lazy("admin:auth_group_changelist"),
+                    },                                        
+                    {
+                        "title": _("Настройки"),
+                        "icon": "settings",
+                        "link": reverse_lazy("admin:constance_config_changelist"),
                     },
                 ],
             },
@@ -354,7 +336,7 @@ UNFOLD = {
 ######################################################################
 # Money
 ######################################################################
-CURRENCIES = ("USD", "EUR")
+CURRENCIES = ("RUB",)
 
 ######################################################################
 # App

@@ -18,6 +18,8 @@ from unfold.widgets import (
     UnfoldAdminMoneyWidget,
     UnfoldAdminRadioSelectWidget,
     UnfoldAdminSelect2Widget,
+    UnfoldAdminSelectWidget,
+    UnfoldAdminNullBooleanSelectWidget,
     UnfoldAdminSelectMultipleWidget,
     UnfoldAdminSplitDateTimeWidget,
     UnfoldAdminTextareaWidget,
@@ -28,7 +30,7 @@ from unfold.widgets import (
     UnfoldBooleanWidget,
 )
 
-from formula.models import Driver
+from formula.models import Client, Booking, Room
 
 
 class HomeView(RedirectView):
@@ -161,7 +163,6 @@ class CustomForm(CustomFormMixin):
         self.helper = FormHelper()
         self.helper.add_input(Submit("submit", _("Submit")))
         self.helper.add_input(Submit("submit", _("Submit 2")))
-        self.helper.add_input(Submit("submit", _("Submit 3")))
         self.helper.attrs = {
             "novalidate": "novalidate",
         }
@@ -228,39 +229,42 @@ class CustomForm(CustomFormMixin):
         )
 
 
-class DriverFormHelper(FormHelper):
+class RoomFormHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "unfold_crispy/layout/table_inline_formset.html"
-        self.form_id = "driver-formset"
+        self.form_id = "room-formset"
         self.form_add = True
         self.form_show_labels = False
         self.attrs = {
             "novalidate": "novalidate",
         }
-        self.add_input(Submit("submit", _("Another submit")))
-        self.add_input(Submit("submit", _("Submit")))
+        self.add_input(Submit("submit", "Сохранить"))
 
 
-class DriverForm(forms.ModelForm):
+class RoomForm(forms.ModelForm):
     class Meta:
-        model = Driver
+        model = Room
         fields = [
-            "first_name",
-            "last_name",
-            "code",
+            "name",
+            "category",
+            "price_per_day",
+            "is_active",
+            "is_available"
         ]
         widgets = {
-            "first_name": UnfoldAdminTextInputWidget(),
-            "last_name": UnfoldAdminTextInputWidget(),
-            "code": UnfoldAdminTextInputWidget(),
+            "name": UnfoldAdminTextInputWidget(),
+            "category": UnfoldAdminSelectWidget(),
+            "price_per_day": UnfoldAdminMoneyWidget(),
+            "is_active": UnfoldAdminNullBooleanSelectWidget(),
+            "is_available": UnfoldAdminNullBooleanSelectWidget(),
         }
 
     def clean(self):
         raise ValidationError("Testing form wide error messages.")
 
 
-class DriverFormSet(forms.BaseModelFormSet):
+class RoomFormSet(forms.BaseModelFormSet):
     def clean(self):
         raise ValidationError("Testing formset wide error messages.")
 
