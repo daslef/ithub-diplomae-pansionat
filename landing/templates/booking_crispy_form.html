@@ -1,0 +1,42 @@
+{% extends 'unfold/layouts/skeleton.html' %}
+
+{% load admin_list i18n unfold crispy_forms_tags static %}
+
+{% block extrahead %}
+    {{ block.super }}
+
+    <title>{% block title %}Пансионат «Душевный очаг»{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script src="{% url 'admin:jsi18n' %}"></script>
+    {{ form.media }}
+    <style>
+        form {
+            max-width: 800px;
+        }
+    </style>
+{% endblock %}
+
+{% block base %}
+<nav class="navbar navbar-expand-lg navbar-light bg-success bg-opacity-75">
+    <div class="container">
+        <a class="navbar-brand text-white" href="/">Пансионат «Душевный очаг»</a>
+        <div>
+            <a class="btn btn-outline-light me-2" href="/">Главная</a>
+            <a class="btn btn-outline-light" href="/book">Бронирование</a>
+        </div>
+    </div>
+</nav>
+
+<main class="container">
+    {% crispy form "unfold_crispy" %}
+</main>
+
+<footer class="bg-success text-white text-center p-3 mt-5">
+    © 2025 Пансионат «Душевный очаг» — забота с теплом и вниманием
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
+

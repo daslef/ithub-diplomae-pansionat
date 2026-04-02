@@ -6,35 +6,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/pansion
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# табличка комнат
-class Room(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    room_number = db.Column(db.String(10))
-    floor = db.Column(db.Integer)
-    type = db.Column(db.String(50))  # "лежачие" или "активные"
-    is_booked = db.Column(db.Boolean, default=False)
-
-# табличка бронирования
-class Booking(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    phone = db.Column(db.String(50))
-    description = db.Column(db.Text)
-    suggested_room = db.Column(db.String(50))
-
-with app.app_context():
-    db.create_all()
-
-    # 💡добавление комнат если их нет
-    if Room.query.count() == 0:
-        rooms = [
-            Room(room_number="101", floor=1, type="лежачие"),
-            Room(room_number="102", floor=1, type="лежачие"),
-            Room(room_number="201", floor=2, type="активные"),
-            Room(room_number="202", floor=2, type="активные"),
-        ]
-        db.session.add_all(rooms)
-        db.session.commit()
 
 @app.route('/')
 def index():

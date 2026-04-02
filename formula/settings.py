@@ -64,6 +64,8 @@ INSTALLED_APPS = [
     "djmoney",
     "djangoql",
     "formula",
+    "landing.apps.LandingConfig",
+    "employee.apps.EmployeeConfig"
 ]
 
 ######################################################################
@@ -82,7 +84,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    "formula.middleware.ReadonlyExceptionHandlerMiddleware",
 ]
 
 ######################################################################
@@ -98,6 +99,7 @@ TEMPLATES = [
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
             path.normpath(path.join(BASE_DIR, "formula/templates")),
+            path.normpath(path.join(BASE_DIR, "landing/templates"))
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -124,7 +126,7 @@ DATABASES = {
 ######################################################################
 # Authentication
 ######################################################################
-AUTH_USER_MODEL = "formula.User"
+AUTH_USER_MODEL = "employee.User"
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
@@ -153,9 +155,9 @@ LOGIN_REDIRECT_URL = reverse_lazy("admin:index")
 ######################################################################
 # Localization
 ######################################################################
-LANGUAGE_CODE = "en"
+LANGUAGE_CODE = "ru"
 
-TIME_ZONE = "Europe/Bratislava"
+TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 
@@ -163,6 +165,7 @@ USE_TZ = True
 
 LANGUAGES = (
     ("en", _("English")),
+    ("ru", _("Russian")),
 )
 
 # https://docs.djangoproject.com/en/5.1/ref/settings/#date-input-formats
@@ -200,7 +203,11 @@ DATETIME_INPUT_FORMATS = [
 ######################################################################
 STATIC_URL = "/static/"
 
-STATICFILES_DIRS = [BASE_DIR / "formula" / "static"]
+STATICFILES_DIRS = [
+    BASE_DIR / "formula" / "static", 
+    BASE_DIR / "employee" / "static", 
+    BASE_DIR / "landing" / "static"
+]
 
 STATIC_ROOT = BASE_DIR / "static"
 
@@ -222,17 +229,16 @@ STORAGES = {
 ######################################################################
 UNFOLD = {
     "SITE_TITLE": "Пансионат",
-    "SITE_HEADER": "Админка",
-    "SITE_SUBHEADER": "Пансионат",
+    "SITE_HEADER": "Пансионат",
+    "SITE_SUBHEADER": "Администрирование",
     "SITE_SYMBOL": "dashboard",
     "SITE_ICON": lambda request: static("formula/images/logo.svg"),
     # "SITE_URL": None,
     # "SHOW_HISTORY": True,
     "SHOW_LANGUAGES": False,
-    "LANGUAGE_FLAGS": {
-        "en": "🇺🇸",
-    },
-    "ENVIRONMENT": "formula.utils.environment_callback",
+    # "LANGUAGE_FLAGS": {
+    #     "en": "🇺🇸",
+    # },
     "LOGIN": {
         "image": lambda request: static("formula/images/login-bg.jpg"),
         "form": "formula.forms.LoginForm",
@@ -245,25 +251,21 @@ UNFOLD = {
     ],
     "TABS": [
         {
-            "page": "clients",
-            "models": ["formula.client"],
+            "page": "bookings",
+            "models": ["formula.booking"],
             "items": [
-                {
-                    "title": "Заявки",
-                    "link": reverse_lazy("admin:formula_client_changelist"),
-                    "active": lambda request: request.path
-                    == reverse_lazy("admin:formula_client_changelist")
-                    and "status__exact" not in request.GET,
-                },
                 {
                     "title": "Необработанные",
                     "link": lambda request: f"{
-                        reverse_lazy('admin:formula_client_changelist')
-                    }?status__exact=ACTIVE",
+                        reverse_lazy('admin:formula_booking_changelist')
+                    }?status__exact=NEW",
                 },
                 {
-                    "title": _("Crispy Form"),
-                    "link": reverse_lazy("admin:crispy_form"),
+                    "title": "Все заявки",
+                    "link": reverse_lazy("admin:formula_booking_changelist"),
+                    "active": lambda request: request.path
+                    == reverse_lazy("admin:formula_booking_changelist")
+                    and "status__exact" not in request.GET,
                 },
             ],
         },
@@ -290,13 +292,13 @@ UNFOLD = {
         "command_search": False,
         "navigation": [
             {
-                "title": _("Ресурсы"),
+                "title": "Ресурсы",
                 "items": [
                     {
                         "title": "Заявки",
                         "icon": "sports_motorsports",
-                        "active": "formula.utils.client_list_link_callback",
-                        "link": reverse_lazy("admin:formula_client_changelist"),
+                        "active": "formula.utils.booking_list_link_callback",
+                        "link": reverse_lazy("admin:formula_booking_changelist"),
                         "badge": "formula.utils.badge_callback",
                         "badge_variant": "danger",
                         "badge_style": "solid",
@@ -315,7 +317,7 @@ UNFOLD = {
                     {
                         "title": "Сотрудники",
                         "icon": "account_circle",
-                        "link": reverse_lazy("admin:formula_user_changelist"),
+                        "link": reverse_lazy("admin:employee_user_changelist"),
                     },
                     {
                         "title": "Группы",
@@ -342,7 +344,6 @@ CURRENCIES = ("RUB",)
 # App
 ######################################################################
 LOGIN_USERNAME = environ.get("LOGIN_USERNAME")
-
 LOGIN_PASSWORD = environ.get("LOGIN_PASSWORD")
 
 ############################################################################
@@ -354,7 +355,6 @@ DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": lambda request: DEBUG}
 # Crispy forms
 ######################################################################
 CRISPY_TEMPLATE_PACK = "unfold_crispy"
-
 CRISPY_ALLOWED_TEMPLATE_PACKS = ["unfold_crispy"]
 
 ######################################################################
@@ -363,62 +363,54 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ["unfold_crispy"]
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 
 CONSTANCE_CONFIG = {
-    "SITE_NAME": ("My Title", _("Website title")),
-    "SITE_DESCRIPTION": ("", _("Website description")),
-    "THEME": ("light-blue", _("Website theme"), "choice_field"),
-    "IN_CONSTRUCTION": (False, _("Website in construction")),
-    "SITE_URL": ("", _("Website URL")),
-    "SITE_LOGO": ("", _("Website logo"), "image_field"),
-    "SITE_FAVICON": ("", _("Website favicon"), "file_field"),
-    "SITE_BACKGROUND_IMAGE": ("", _("Website background image"), "image_field"),
-    "SITE_BACKGROUND_COLOR": ("#FFFFFF", _("Website background color")),
-    "SITE_FONT_SIZE": (16, _("Base font size in pixels")),
-    "SITE_ANALYTICS_ID": ("", _("Google Analytics ID")),
-    "SITE_MAINTENANCE_MODE": (False, _("Enable maintenance mode")),
-    "SITE_MAINTENANCE_MESSAGE": ("", _("Maintenance mode message")),
-    "SITE_SOCIAL_LINKS": ("", _("Social media links")),
-    "SITE_FOOTER_TEXT": ("", _("Footer text")),
-    "SITE_META_KEYWORDS": ("", _("Meta keywords")),
-    "SITE_CACHE_TTL": (3600, _("Cache TTL in seconds")),
-    "SITE_DATE_FORMAT": ("%Y-%m-%d", _("Date format")),
-    "SITE_TIME_ZONE": ("UTC", _("Time zone")),
+    "SITE_NAME": ("My Title", "Название сайта"),
+    "SITE_DESCRIPTION": ("", "Описание сайта"),
+    "THEME": ("light-blue", "Тема оформления", "choice_field"),
+    "IN_CONSTRUCTION": (False, "Сайт в разработке"),
+    "SITE_URL": ("", "Адрес сайта"),
+    "SITE_LOGO": ("", "Логотип", "image_field"),
+    "SITE_FAVICON": ("", "Фавикон", "file_field"),
+    "SITE_BACKGROUND_IMAGE": ("", "Фоновое изображение сайта", "image_field"),
+    "SITE_BACKGROUND_COLOR": ("#FFFFFF", "Цвет фона сайта"),
+    "SITE_FONT_SIZE": (16, "Базовый размер шрифта"),
+    # "SITE_ANALYTICS_ID": ("", _("Google Analytics ID")),
+    "SITE_MAINTENANCE_MODE": (False, "Включить режим тех. работ"),
+    "SITE_MAINTENANCE_MESSAGE": ("", "Сайт на обслуживании"),
+    "SITE_SOCIAL_LINKS": ("", "Ссылки на соцсети"),
+    "SITE_FOOTER_TEXT": ("", "Текст футера"),
+    "SITE_META_KEYWORDS": ("", "Ключевые слова"),
+    "SITE_CACHE_TTL": (3600, "TTL кэша, сек."),
+    "SITE_DATE_FORMAT": ("%Y-%m-%d", "Формат дат"),
+    "SITE_TIME_ZONE": ("UTC", "Часовой пояс"),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
     {
-        "General Settings": {
+        "Общие настройки": {
             "fields": (
                 "SITE_NAME",
                 "SITE_DESCRIPTION",
                 "SITE_URL",
             ),
-            # "collapse": False,
         },
-        "Theme & Design": {
+        "Дизайн": {
             "fields": (
                 "THEME",
                 "SITE_FONT_SIZE",
                 "SITE_BACKGROUND_COLOR",
                 "SITE_BACKGROUND_IMAGE",
-            ),
-            # "collapse": False,
-        },
-        "Assets": {
-            "fields": (
                 "SITE_LOGO",
                 "SITE_FAVICON",
             ),
-            # "collapse": True,
         },
-        "Content": {
+        "Контент": {
             "fields": (
                 "SITE_FOOTER_TEXT",
                 "SITE_META_KEYWORDS",
                 "SITE_SOCIAL_LINKS",
             ),
-            # "collapse": True,
         },
-        "System": {
+        "Для разработчиков": {
             "fields": (
                 "IN_CONSTRUCTION",
                 "SITE_MAINTENANCE_MODE",
@@ -426,9 +418,8 @@ CONSTANCE_CONFIG_FIELDSETS = OrderedDict(
                 "SITE_CACHE_TTL",
                 "SITE_DATE_FORMAT",
                 "SITE_TIME_ZONE",
-                "SITE_ANALYTICS_ID",
             ),
-            # "collapse": True,
+            "collapse": True,
         },
     }
 )

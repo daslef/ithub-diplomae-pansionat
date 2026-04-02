@@ -2,36 +2,18 @@ from django.contrib import messages
 from django.forms import modelformset_factory
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import FormView, RedirectView
+from django.views.generic import FormView, RedirectView, TemplateView
 from unfold.views import UnfoldModelAdminViewMixin
 
 from formula.forms import (
-    CustomForm,
     RoomForm,
     RoomFormHelper,
     RoomFormSet,
 )
-from formula.models import Booking, Client, Room
+
+from formula.models import Booking, Room
 
 
-class HomeView(RedirectView):
-    pattern_name = "admin:index"
-
-
-class CrispyFormView(UnfoldModelAdminViewMixin, FormView):
-    title = _("Crispy form")
-    form_class = CustomForm
-    success_url = reverse_lazy("admin:index")
-    permission_required = (
-        "formula.view_client",
-        "formula.add_client",
-        "formula.change_client",
-        "formula.delete_client",
-    )
-    template_name = "formula/client_crispy_form.html"
-
-    def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs)
 
 
 class CrispyFormsetView(UnfoldModelAdminViewMixin, FormView):
