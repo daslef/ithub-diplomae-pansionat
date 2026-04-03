@@ -24,7 +24,7 @@ class AuditedModel(models.Model):
 
 
 class Room(AuditedModel):
-    name = models.TextField(max_length=100)
+    name = models.TextField("Комната", max_length=100)
     category = models.CharField(
         "Категория",
         choices=ActivityCategory,
@@ -35,8 +35,8 @@ class Room(AuditedModel):
     price_per_day = MoneyField("Цена за день", max_digits=8, decimal_places=2, default_currency="RUB")
     description = models.TextField("Описание", max_length=300)
     picture = models.ImageField("Фото", null=True, blank=True, default=None)
-    is_active = models.BooleanField(default=True)
-    is_available = models.BooleanField(default=True)
+    is_active = models.BooleanField("В обслуживании", default=True)
+    is_available = models.BooleanField("Доступна", default=True)
     history = HistoricalRecords()
 
     class Meta:
@@ -57,8 +57,8 @@ class Booking(AuditedModel):
 
     phone = models.TextField("Телефон", max_length=50)
     preferred_call_time = models.DateTimeField("Удобное время звонка", null=True, blank=True, default=None)
+    
     preferred_check_in = models.DateTimeField("Дата и время заселения", null=True, blank=True, default=None)    
-
     preferred_budget = MoneyField("Бюджет/сутки", max_digits=8, decimal_places=2, default_currency="RUB", default=None, null=True, blank=True)
     room = models.ForeignKey(
         "Room",

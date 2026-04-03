@@ -29,7 +29,6 @@ from unfold.contrib.filters.admin import (
     CheckboxFilter,
     ChoicesCheckboxFilter,
     RangeDateFilter,
-    RangeDateTimeFilter,
     RangeNumericFilter,
     RelatedCheckboxFilter,
     RelatedDropdownFilter,
@@ -102,6 +101,37 @@ class RoomNonrelatedStackedInline(NonrelatedStackedInline):
 #     show_change_link = True
 
 
+class FullNameFilter(TextFilter):
+    title = "Полное имя"
+    parameter_name = "fullname"
+
+    def queryset(self, request, queryset):
+        if self.value() in EMPTY_VALUES:
+            return queryset
+
+        return queryset.filter(
+            Q(first_name__icontains=self.value()) | Q(last_name__icontains=self.value())
+        )
+
+
+# class RaceWinnerInline(StackedInline):
+#     model = Race
+#     fields = ["winner", "year", "laps", "picture"]
+#     readonly_fields = ["winner", "year", "laps"]
+#     ordering_field = "weight"
+#     extra = 0
+#     per_page = 15
+#     tab = True
+
+
+class ChartSection(TemplateSection):
+    template_name = "formula/client_section.html"
+
+
+class PreferedBudgetSliderNumericFilter(SliderNumericFilter):
+    MAX_DECIMALS = 2
+
+
 @admin.register(Room)
 class RoomAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionModelAdmin):
     show_facets = False
@@ -134,7 +164,7 @@ class RoomAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionModelAdmin):
     @action(
         description="Custom detail action",
         url_path="actions-detail-custom-url",
-        permissions=["custom_actions_detail", "another_custom_actions_detail"],
+        permissions=["custom_actions_detail"],
     )
     def custom_actions_detail(self, request, object_id):
         messages.success(
@@ -144,16 +174,13 @@ class RoomAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionModelAdmin):
         return redirect(request.headers["referer"])
 
     def has_custom_actions_detail_permission(self, request, object_id):
-        return request.user.is_superuser
+        return request.user.is_superuser or request.user.is_staff
 
-    def has_another_custom_actions_detail_permission(self, request, object_id):
-        return request.user.is_staff
 
     @action(
         description="Custom submit line action",
         permissions=[
             "custom_actions_submit_line",
-            "another_custom_actions_submit_line",
         ],
     )
     def custom_actions_submit_line(self, request, obj):
@@ -165,91 +192,80 @@ class RoomAdmin(ModelAdmin, ImportExportModelAdmin, ExportActionModelAdmin):
     def has_custom_actions_submit_line_permission(self, request, obj):
         return request.user.is_superuser
 
-    def has_another_custom_actions_submit_line_permission(self, request, obj):
-        return request.user.is_staff
-
-
-class FullNameFilter(TextFilter):
-    title = "полное имя"
-    parameter_name = "fullname"
-
-    def queryset(self, request, queryset):
-        if self.value() in EMPTY_VALUES:
-            return queryset
-
-        return queryset.filter(
-            Q(first_name__icontains=self.value()) | Q(last_name__icontains=self.value())
-        )
-
-
-# class RaceWinnerInline(StackedInline):
-#     model = Race
-#     fields = ["winner", "year", "laps", "picture"]
-#     readonly_fields = ["winner", "year", "laps"]
-#     ordering_field = "weight"
-#     extra = 0
-#     per_page = 15
-#     tab = True
-
-
-class ChartSection(TemplateSection):
-    template_name = "formula/client_section.html"
-
 
 @admin.register(Booking)
 class BookingAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DjangoQLSearchMixin, ModelAdmin):
     fieldsets = [
         (
-            None,
+            "Клиент",
             {
                 "fields": [
                     "first_name",
                     "last_name",
                     "middle_name",
-                    "phone",
                     "description",
                     "age",
-                    "room",
                 ]
             },
         ),
-    #     (
-    #         _("Boolean fields"),
-    #         {
-    #             "classes": ["tab"],
-    #             "fields": [
-    #                 "is_active",
-    #             ],
-    #         },
-    #     ),
+        (
+            "Заявка",
+            {
+                "classes": ["tab"],
+                "fields": [
+                    "room",
+                    "preferred_check_in",
+                    "preferred_budget"
+                ],
+            },
+        ),
+        (
+            "Контакты",
+            {
+                "classes": ["tab"],
+                "fields": [
+                    "phone",
+                    "preferred_call_time",
+                ],
+            },
+        ),
+        (
+            "Статус", 
+            {
+                "fields": [
+                    "status"
+                ]
+            }
+        )
     ]
 
-    # list_display = [
-        # "room__name",
-        # "display_client",
-    # ]
+    list_display = [
+        "display_client",
+        "age",
+        "display_details",
+        "preferred_check_in",
+        "display_contacts",
+        "status",
+        "modified_at",
+    ]
 
     list_filter = [
-        # ("client__category", RelatedCheckboxFilter),
-        # ("room__price_per_day", RangeNumericFilter),
-        ("age", SingleNumericFilter),
-        ("created_at", RangeDateTimeFilter),
         FullNameFilter,
-        # ("constructors", AutocompleteSelectMultipleFilter),
-        # ("room__name", RelatedDropdownFilter),
-        # ("salary", SalarySliderNumericFilter),
-        # ("room__category", ChoicesCheckboxFilter),
-        # ("category", AllValuesCheckboxFilter),
-        # DriverCustomCheckboxFilter,
-        # ("is_active", BooleanRadioFilter),
+        ("age", RangeNumericFilter),
+        ("created_at", RangeDateFilter),
+        ("preferred_check_in", RangeDateFilter),
+        ("preferred_budget", PreferedBudgetSliderNumericFilter),
+        ("room", RelatedDropdownFilter),
     ]
     list_filter_sheet = False
-    list_filter_submit = True
+    list_filter_submit = False
+    
     list_fullwidth = True
     list_horizontal_scrollbar_top = True
+    list_select_related = ['room']
+
     list_sections = [ChartSection]
     list_sections_classes = "lg:grid-cols-2"
-    list_select_related = ['room']
 
     # raw_id_fields = ["room"]
     # form = ClientAdminForm
@@ -269,18 +285,12 @@ class BookingAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DjangoQLSearchMixin, M
         "status": admin.VERTICAL,
     }
 
-    readonly_fields = [
-        # "picture",
-    ]
+    readonly_fields = []
 
-    actions_list = ["changelist_action1"]
-    actions_detail = []
+    actions_list = []
+    actions_detail = ["archive"]
 
-    
-    list_before_template = "formula/driver_list_before.html"
     change_form_show_cancel_button = True
-    change_form_before_template = "formula/driver_change_form_before.html"
-    change_form_after_template = "formula/driver_change_form_after.html"
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, change, **kwargs)
@@ -297,64 +307,43 @@ class BookingAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DjangoQLSearchMixin, M
             .get_queryset(request)
             .prefetch_related(
                 "room",
-                # "race_set__circuit",
             )
         )
     
-    # @display(
-    #     description="Клиент",
-    #     label={
-    #         ActivityCategory.BEDRIDDEN: "danger",
-    #         ActivityCategory.STANDARD: "success",
-    #     },
-    # )
-    # def display_client(self, instance: Booking):
-    #     return instance.first_name
+    @display(
+        description="Клиент",
+    )
+    def display_client(self, instance: Booking):
+        return instance.full_name
 
 
-    @action(description=_("Initialize nodes"), icon="hub")
-    def changelist_action1(self, request):
+    @display(
+        description="Детали",
+    )
+    def display_details(self, instance: Booking):
+        if instance.room:
+            return f'Комната "{instance.room}"'
+        return f'Комната не выбрана (бюджет {instance.preferred_budget})'
+
+
+    @display(
+        description="Контактные данные",
+    )
+    def display_contacts(self, instance: Booking):
+        if instance.preferred_call_time:
+            return f'{instance.phone} ({instance.preferred_call_time.time})' 
+        return instance.phone
+
+
+    @action(description="Отправить в архив", permissions=["archive"])
+    def archive(self, request, object_id):
         messages.success(
-            request, _("Changelist action has been successfully executed.")
-        )
-        return redirect(reverse_lazy("admin:formula_booking_changelist"))
-
-    @action(description=_("Revalidate cache"), permissions=["revalidate_cache"])
-    def change_detail_action1(self, request, object_id):
-        messages.success(
-            request, _("Change detail action has been successfully executed.")
+            request, "Заявка была отклонена и отправлена в архив"
         )
         return redirect(reverse_lazy("admin:formula_booking_change", args=[object_id]))
 
-    def has_revalidate_cache_permission(self, request, object_id):
+    def has_archive_permission(self, request, object_id):
         return request.user.is_superuser
-
-    @action(description=_("Deactivate object"))
-    def change_detail_action2(self, request, object_id):
-        messages.success(
-            request, _("Change detail action has been successfully executed.")
-        )
-        return redirect(reverse_lazy("admin:formula_booking_change", args=[object_id]))
-
-
-class BookingCustomCheckboxFilter(CheckboxFilter):
-    title = _("Custom status")
-    parameter_name = "custom_status"
-
-    def lookups(self, request, model_admin):
-        return ActivityCategory.choices
-
-    def queryset(self, request, queryset):
-        if self.value() not in EMPTY_VALUES:
-            return queryset.filter(status__in=self.value())
-        elif self.parameter_name in self.used_parameters:
-            return queryset.filter(status=self.used_parameters[self.parameter_name])
-
-        return queryset
-
-
-class SalarySliderNumericFilter(SliderNumericFilter):
-    MAX_DECIMALS = 2
 
 
 @register_component
