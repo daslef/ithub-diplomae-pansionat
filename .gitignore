@@ -10,8 +10,6 @@ dist/
 .env
 fly.toml
 .vscode
-static
-media
 .dockerignore
 *.sqlite
 docker-compose.dev.yml
