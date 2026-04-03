@@ -211,7 +211,6 @@ class BookingAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DjangoQLSearchMixin, M
         (
             "Заявка",
             {
-                "classes": ["tab"],
                 "fields": [
                     "room",
                     "preferred_check_in",
@@ -222,7 +221,6 @@ class BookingAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DjangoQLSearchMixin, M
         (
             "Контакты",
             {
-                "classes": ["tab"],
                 "fields": [
                     "phone",
                     "preferred_call_time",
@@ -258,7 +256,7 @@ class BookingAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DjangoQLSearchMixin, M
         ("room", RelatedDropdownFilter),
     ]
     list_filter_sheet = False
-    list_filter_submit = False
+    list_filter_submit = True
     
     list_fullwidth = True
     list_horizontal_scrollbar_top = True
@@ -331,7 +329,7 @@ class BookingAdmin(GuardedModelAdmin, SimpleHistoryAdmin, DjangoQLSearchMixin, M
     )
     def display_contacts(self, instance: Booking):
         if instance.preferred_call_time:
-            return f'{instance.phone} ({instance.preferred_call_time.time})' 
+            return f'{instance.phone} ({instance.preferred_call_time.strftime("%H:%M")})' 
         return instance.phone
 
 
