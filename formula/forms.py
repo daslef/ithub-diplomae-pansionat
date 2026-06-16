@@ -16,11 +16,11 @@ from unfold.widgets import (
     UnfoldAdminImageFieldWidget,
     UnfoldAdminIntegerFieldWidget,
     UnfoldAdminMoneyWidget,
+    UnfoldAdminNullBooleanSelectWidget,
     UnfoldAdminRadioSelectWidget,
     UnfoldAdminSelect2Widget,
-    UnfoldAdminSelectWidget,
-    UnfoldAdminNullBooleanSelectWidget,
     UnfoldAdminSelectMultipleWidget,
+    UnfoldAdminSelectWidget,
     UnfoldAdminSplitDateTimeWidget,
     UnfoldAdminTextareaWidget,
     UnfoldAdminTextInputWidget,
@@ -53,13 +53,7 @@ class RoomFormHelper(FormHelper):
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        fields = [
-            "name",
-            "category",
-            "price_per_day",
-            "is_active",
-            "is_available"
-        ]
+        fields = ["name", "category", "price_per_day", "is_active", "is_available"]
         widgets = {
             "name": UnfoldAdminTextInputWidget(),
             "category": UnfoldAdminSelectWidget(),
@@ -68,13 +62,14 @@ class RoomForm(forms.ModelForm):
             "is_available": UnfoldAdminNullBooleanSelectWidget(),
         }
 
-    def clean(self):
-        raise ValidationError("Testing form wide error messages.")
+    # def clean(self):
+    #     raise ValidationError("Testing form wide error messages.")
 
 
 class RoomFormSet(forms.BaseModelFormSet):
-    def clean(self):
-        raise ValidationError("Testing formset wide error messages.")
+    pass
+    # def clean(self):
+    #     raise ValidationError("Testing formset wide error messages.")
 
 
 class LoginForm(AuthenticationForm):

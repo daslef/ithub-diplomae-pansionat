@@ -1,10 +1,10 @@
 {
-	"scripts": {
-		"tailwind:build": "npx @tailwindcss/cli -i formula/styles.css -o formula/static/css/styles.css --minify",
-		"tailwind:watch": "npx @tailwindcss/cli -i formula/styles.css -o formula/static/css/styles.css --watch --minify"
-	},
-	"dependencies": {
-		"@tailwindcss/cli": "^4.1.7",
-		"tailwindcss": "^4.1.7"
-	}
+  "scripts": {
+    "tailwind:build": "npx @tailwindcss/cli -i landing/static/style.css -o landing/static/styles.css",
+    "tailwind:watch": "npx @tailwindcss/cli -i formula/styles.css -o formula/static/css/styles.css --watch --minify"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.7",
+    "tailwindcss": "^4.1.7"
+  }
 }

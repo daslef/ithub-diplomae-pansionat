@@ -1,19 +1,15 @@
-from django import forms
-
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Column, Div, Fieldset, Layout, Row
-
+from django import forms
 from unfold.layout import Submit
 from unfold.widgets import (
     UnfoldAdminIntegerFieldWidget,
     UnfoldAdminMoneyWidget,
     UnfoldAdminSelect2Widget,
-    UnfoldAdminNullBooleanSelectWidget,
     UnfoldAdminSplitDateTimeWidget,
     UnfoldAdminTextareaWidget,
     UnfoldAdminTextInputWidget,
     UnfoldAdminTimeWidget,
-    UnfoldBooleanSwitchWidget,
     UnfoldBooleanWidget,
 )
 
@@ -64,12 +60,12 @@ class CustomFormMixin(forms.Form):
     agreement = forms.BooleanField(
         label="Согласен на обработку данных",
         required=True,
-        initial=False,
+        initial=True,
         help_text="Для передачи заявки необходимо ознакомиться и принять условия соглашения",
         widget=UnfoldBooleanWidget,
     )
 
-    preferred_budget = forms.DecimalField(
+    preferred_budget = forms.CharField(
         label="Предпочтительный бюджет",
         required=True,
         help_text="Укажите желаемую стоимость/день, и мы поможем подобрать комнату",
@@ -88,7 +84,7 @@ class CustomFormMixin(forms.Form):
         required=True,
         widget=UnfoldAdminTextareaWidget(),
     )
-    
+
     room = forms.TypedChoiceField(
         label="Комната",
         choices=[
@@ -103,13 +99,14 @@ class CustomFormMixin(forms.Form):
     )
 
 
-
 class CustomForm(CustomFormMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.helper = FormHelper()
-        self.helper.add_input(Submit("submit", "Отправить заявку", css_class="text-black bg-green-700"))
+        self.helper.add_input(
+            Submit("submit", "Отправить заявку", css_class="text-black bg-green-700")
+        )
         self.helper.attrs = {
             "novalidate": "novalidate",
         }
@@ -121,12 +118,12 @@ class CustomForm(CustomFormMixin):
                         Div("last_name", css_class="flex-1"),
                         "first_name",
                         "middle_name",
-                        "age",
-                        css_class="w-full flex"
+                        css_class="w-full flex",
                     ),
                     "description",
                     "preferred_check_in",
                     Row(
+                        "age",
                         "phone",
                         "preferred_call_time",
                         css_class="gap-5",
@@ -140,7 +137,6 @@ class CustomForm(CustomFormMixin):
                 Row(
                     Div("agreement", css_class="w-2/3"),
                 ),
-                css_class="gap-5"
+                css_class="gap-5",
             )
         )
-
